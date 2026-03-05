@@ -46,12 +46,16 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://user-service:8082
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://post-service:8083
       - SPRING_CLOUD_GATEWAY_ROUTES_4_URI=http://job-service:8084
+      - SPRING_CLOUD_GATEWAY_ROUTES_5_URI=http://event-service:8085
+      - SPRING_CLOUD_GATEWAY_ROUTES_6_URI=http://notification-service:8088
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-and-long-secret-key-for-decp-project}
     depends_on:
       - auth-service
       - user-service
       - post-service
       - job-service
+      - event-service
+      - notification-service
 
   auth-service:
     build: ./backend/auth-service
@@ -101,6 +105,20 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+
+  notification-service:
+    build: ./backend/notification-service
+    container_name: decp-notification-prod
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://root:rootpassword@mongodb:27017/decp_notifications?authSource=admin
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - REDIS_HOST=redis
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - redis
 
   # Frontend
   web-client:
