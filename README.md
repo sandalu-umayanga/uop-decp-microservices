@@ -8,132 +8,133 @@ A microservices-based social and career platform for students and alumni of the 
 
 ## Project Overview
 
-DECP facilitates networking, career opportunities, and academic collaboration through a modular, scalable microservices architecture. The platform enables students to connect with alumni, share posts, apply for jobs/internships, participate in department events, collaborate on research, and find mentors.
+DECP facilitates networking, career opportunities, and academic collaboration through a modular, scalable microservices architecture. The platform enables students to connect with alumni, share posts, apply for jobs/internships, participate in department events, collaborate on research, exchange real-time messages, and find mentors.
 
-### Key Features
+### Features
 
-| Feature            | Description                                    | Status     |
-| ------------------ | ---------------------------------------------- | ---------- |
-| **Authentication** | JWT-based login with role-based access control | ✅ Live    |
-| **User Profiles**  | Registration, profiles, alumni directory       | ✅ Live    |
-| **Social Feed**    | Posts with likes, comments, media              | ✅ Live    |
-| **Job Portal**     | Job/internship listings with applications      | ✅ Live    |
-| **Campus Events**  | Event creation, RSVP, calendar                 | 🔨 Planned |
-| **Research Hub**   | Academic papers, versioning, DOI linking       | 🔨 Planned |
-| **Messaging**      | Real-time chat via WebSocket + STOMP           | 🔨 Planned |
-| **Notifications**  | Batched push notifications                     | 🔨 Planned |
-| **Analytics**      | Platform usage stats (admin dashboard)         | 🔨 Planned |
-| **Mentorship**     | Alumni-student mentor matching                 | 🔨 Planned |
+| Feature            | Description                                                               |
+| ------------------ | ------------------------------------------------------------------------- |
+| **Authentication** | JWT-based login with role-based access control (STUDENT / ALUMNI / ADMIN) |
+| **User Profiles**  | Registration, profile management, alumni directory                        |
+| **Social Feed**    | Posts with likes, comments, and media attachments                         |
+| **Job Portal**     | Job/internship listings with full application workflow                    |
+| **Campus Events**  | Event creation, RSVP management, attendee tracking                        |
+| **Research Hub**   | Academic papers with versioning, DOI linking, and citations               |
+| **Messaging**      | Real-time 1-on-1 chat via WebSocket + STOMP                               |
+| **Notifications**  | Centralized notification hub driven by RabbitMQ events                    |
+| **Analytics**      | Platform-wide usage statistics (admin dashboard, CSV export)              |
+| **Mentorship**     | AI-scored alumni–student mentor matching and relationship management      |
 
 ---
 
 ## Tech Stack
 
-| Layer             | Technology                                                         |
-| ----------------- | ------------------------------------------------------------------ |
-| **Backend**       | Java 17, Spring Boot 3.2.3, Spring Cloud Gateway                   |
-| **Frontend**      | React 19 (TypeScript), Axios, React Router 7                       |
-| **Databases**     | PostgreSQL 15 (relational), MongoDB 6 (documents), Redis 7 (cache) |
-| **Messaging**     | RabbitMQ 3 (async event-driven communication)                      |
-| **DevOps**        | Docker, Docker Compose, GitHub Actions                             |
-| **Documentation** | SpringDoc OpenAPI (Swagger UI)                                     |
+| Layer         | Technology                                                         |
+| ------------- | ------------------------------------------------------------------ |
+| **Backend**   | Java 17, Spring Boot 3.2.3, Spring Cloud Gateway                   |
+| **Frontend**  | React 19 (TypeScript), Vite, TailwindCSS, Axios, React Router 7    |
+| **Databases** | PostgreSQL 15 (relational), MongoDB 6 (documents), Redis 7 (cache) |
+| **Messaging** | RabbitMQ 3 (async event-driven communication)                      |
+| **Real-time** | WebSocket + STOMP (SockJS fallback)                                |
+| **DevOps**    | Docker, Docker Compose, Taskfile                                   |
 
 ---
 
 ## Architecture
 
 ```
-                          ┌──────────────┐
-                          │  Web Client  │
-                          │  React (3000)│
-                          └──────┬───────┘
+                        ┌─────────────────┐
+                        │   Web Client    │
+                        │ React/Vite 5173 │
+                        └────────┬────────┘
                                  │
-                          ┌──────▼───────┐
-                          │ API Gateway  │
-                          │ (8080) JWT   │
-                          └──┬───┬───┬───┘
-            ┌────────────────┼───┼───┼────────────────┐
-            ▼                ▼   ▼   ▼                ▼
-       ┌────────┐     ┌─────┐ ┌─────┐ ┌─────┐  ┌──────────┐
-       │  Auth  │     │User │ │Post │ │ Job │  │ Event +  │
-       │  8081  │     │8082 │ │8083 │ │8084 │  │ more...  │
-       └────────┘     └──┬──┘ └──┬──┘ └──┬──┘  └──────────┘
-                         │      │      │
-              ┌──────────▼──┐ ┌─▼──────▼──┐  ┌─────────┐
-              │ PostgreSQL  │ │  MongoDB   │  │  Redis  │
-              └─────────────┘ └────────────┘  └─────────┘
-                         │      │      │
-                         └──────▼──────┘
-                          ┌────────────┐
-                          │  RabbitMQ  │
-                          │ Event Bus  │
-                          └────────────┘
+                        ┌────────▼────────┐
+                        │  API Gateway    │
+                        │  (8080) + JWT   │
+                        └──┬──┬──┬──┬──┬──┘
+         ┌─────────────────┤  │  │  │  ├─────────────────┐
+         ▼          ▼      ▼  ▼  ▼  ▼      ▼            ▼
+    ┌────────┐ ┌────────┐ ┌────┐┌────┐ ┌───────┐  ┌──────────┐
+    │  Auth  │ │  User  │ │Post││Job │ │ Event │  │Research  │
+    │  8081  │ │  8082  │ │8083││8084│ │ 8085  │  │  8086    │
+    └────────┘ └────────┘ └────┘└────┘ └───────┘  └──────────┘
+    ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌────────────┐
+    │Messaging │ │  Notif.  │ │ Analytics │ │ Mentorship │
+    │   8087   │ │   8088   │ │   8089    │ │    8090    │
+    └──────────┘ └──────────┘ └───────────┘ └────────────┘
+         │            │             │              │
+    ┌────▼────┐  ┌────▼────┐  ┌────▼────┐  ┌─────▼─────┐
+    │ MongoDB │  │  Redis  │  │ Postgre │  │ RabbitMQ  │
+    └─────────┘  └─────────┘  └─────────┘  └───────────┘
 ```
 
 ### Services
 
-| Service                  | Port | Database        | Description                                   |
-| ------------------------ | ---- | --------------- | --------------------------------------------- |
-| **API Gateway**          | 8080 | —               | Routes, JWT validation, CORS                  |
-| **Auth Service**         | 8081 | —               | Login, token generation/validation            |
-| **User Service**         | 8082 | PostgreSQL      | User profiles, registration, alumni directory |
-| **Post Service**         | 8083 | MongoDB         | Social feed, likes, comments                  |
-| **Job Service**          | 8084 | PostgreSQL      | Job listings, applications                    |
-| **Event Service**        | 8085 | PostgreSQL      | Campus events, RSVP                           |
-| **Research Service**     | 8086 | MongoDB         | Academic research hub                         |
-| **Messaging Service**    | 8087 | MongoDB         | Real-time chat (WebSocket)                    |
-| **Notification Service** | 8088 | MongoDB + Redis | Push notifications, batching                  |
-| **Analytics Service**    | 8089 | PostgreSQL      | Platform statistics                           |
-| **Mentorship Service**   | 8090 | PostgreSQL      | Mentor-mentee matching                        |
+| Service                  | Port | Database           | Description                                    |
+| ------------------------ | ---- | ------------------ | ---------------------------------------------- |
+| **API Gateway**          | 8080 | —                  | Routes, JWT validation, CORS, header injection |
+| **Auth Service**         | 8081 | —                  | Login, JWT generation/validation               |
+| **User Service**         | 8082 | PostgreSQL         | Registration, profiles, alumni directory       |
+| **Post Service**         | 8083 | MongoDB            | Social feed, likes, comments                   |
+| **Job Service**          | 8084 | PostgreSQL         | Job listings, applications                     |
+| **Event Service**        | 8085 | PostgreSQL         | Campus events, RSVP                            |
+| **Research Service**     | 8086 | PostgreSQL         | Papers, versioning, DOI, citations             |
+| **Messaging Service**    | 8087 | MongoDB            | Real-time chat (WebSocket/STOMP)               |
+| **Notification Service** | 8088 | MongoDB + Redis    | Event-driven notifications                     |
+| **Analytics Service**    | 8089 | PostgreSQL + Redis | Admin metrics, export                          |
+| **Mentorship Service**   | 8090 | PostgreSQL         | Mentor matching, relationships, feedback       |
+
+### Infrastructure
+
+| Component     | Port         | Purpose                                                                |
+| ------------- | ------------ | ---------------------------------------------------------------------- |
+| PostgreSQL 15 | 5433         | Relational data (users, jobs, events, research, analytics, mentorship) |
+| MongoDB 6     | 27018        | Document data (posts, messages, notifications)                         |
+| Redis 7       | 6379         | Caching (notifications, analytics)                                     |
+| RabbitMQ 3    | 5672 / 15672 | Async event bus / Management UI                                        |
 
 ---
 
-## Prerequisites
+## Quick Start
 
-- **Java 17** or higher
-- **Node.js** v18+
-- **Docker & Docker Desktop**
-- **Maven** (optional — use the provided `./mvnw`)
+### Prerequisites
 
----
+- **Java JDK 17**
+- **Node.js 18+**
+- **Docker Desktop**
+- **[Task](https://taskfile.dev/installation/)** — install with `winget install Task.Task` or `brew install go-task`
 
-## Getting Started
-
-### 1. Start Infrastructure
+### One-command startup
 
 ```bash
-docker-compose up -d
+git clone https://github.com/DinethShakya23/uop-decp-microservices.git
+cd uop-decp-microservices
+cp .env.example .env
+task install:frontend
+task start
 ```
 
-This starts PostgreSQL, MongoDB (port 27018), Redis, and RabbitMQ.
+This will:
 
-### 2. Start Backend Services
+1. Start infrastructure containers (PostgreSQL, MongoDB, Redis, RabbitMQ)
+2. Build all 11 backend services
+3. Launch everything in parallel (backend + frontend)
 
-From the `backend/` directory, start each service in a separate terminal:
+Open **http://localhost:5173** in your browser.
+
+### Verify everything is running
 
 ```bash
-./mvnw -pl api-gateway spring-boot:run      # Port 8080
-./mvnw -pl auth-service spring-boot:run      # Port 8081
-./mvnw -pl user-service spring-boot:run      # Port 8082
-./mvnw -pl post-service spring-boot:run      # Port 8083
-./mvnw -pl job-service spring-boot:run       # Port 8084
+task health
 ```
 
-### 3. Start Frontend
+### Stop everything
 
 ```bash
-cd frontend/web-client
-npm install
-npm start
+task stop
 ```
 
-Open http://localhost:3000
-
-### Production (Full Docker)
-
-```bash
-docker-compose -f docker-compose.prod.yml up --build
-```
+> See [GETTING_STARTED.md](GETTING_STARTED.md) for the full developer setup guide with all available Task commands.
 
 ---
 
@@ -141,83 +142,231 @@ docker-compose -f docker-compose.prod.yml up --build
 
 ```
 ├── backend/
-│   ├── pom.xml                 # Parent POM (all modules)
-│   ├── api-gateway/            # Spring Cloud Gateway
-│   ├── auth-service/           # Authentication + JWT
+│   ├── pom.xml                 # Parent POM (all 11 modules)
+│   ├── mvnw.cmd                # Maven wrapper
+│   ├── api-gateway/            # Spring Cloud Gateway + JWT filter
+│   ├── auth-service/           # Authentication + JWT generation
 │   ├── user-service/           # User profiles + registration
-│   ├── post-service/           # Social feed + posts
+│   ├── post-service/           # Social feed + posts (MongoDB)
 │   ├── job-service/            # Job listings + applications
 │   ├── event-service/          # Campus events + RSVP
 │   ├── research-service/       # Academic research hub
-│   ├── messaging-service/      # Real-time chat
-│   ├── notification-service/   # Notification center
-│   ├── analytics-service/      # Platform analytics
-│   └── mentorship-service/     # Mentor matching
+│   ├── messaging-service/      # Real-time chat (WebSocket)
+│   ├── notification-service/   # Notification center (RabbitMQ)
+│   ├── analytics-service/      # Platform analytics (admin)
+│   └── mentorship-service/     # Mentor matching + feedback
 ├── frontend/
-│   └── web-client/             # React TypeScript SPA
-├── designs/                    # Interactive architecture diagrams (JSX)
+│   └── web-client/             # React + TypeScript + Vite + TailwindCSS
+├── designs/                    # Architecture diagrams (JSX)
 ├── docker-compose.yml          # Dev infrastructure
 ├── docker-compose.prod.yml     # Full production stack
-├── PROJECT_PLAN.md             # Detailed implementation plan
-└── README.md
+├── Taskfile.yml                # Task runner (single-command startup)
+├── .env.example                # Environment variable template
+├── GETTING_STARTED.md          # Developer setup guide
+├── MOBILE_API_REFERENCE.md     # Mobile developer API docs
+└── PROJECT_PLAN.md             # Implementation plan
 ```
 
 ---
 
 ## Security & Roles
 
-| Role        | Capabilities                                                             |
-| ----------- | ------------------------------------------------------------------------ |
-| **STUDENT** | View content, create posts, apply for jobs, RSVP events, request mentors |
-| **ALUMNI**  | All student capabilities + post jobs, create events, mentor students     |
-| **ADMIN**   | All capabilities + analytics dashboard, manage users, content moderation |
+| Role        | Capabilities                                                                          |
+| ----------- | ------------------------------------------------------------------------------------- |
+| **STUDENT** | View content, create posts, apply for jobs, RSVP events, request mentors              |
+| **ALUMNI**  | All student capabilities + post jobs, create events, upload research, mentor students |
+| **ADMIN**   | All capabilities + analytics dashboard, content moderation                            |
 
 ### Authentication Flow
 
-1. Client sends credentials to Auth Service via API Gateway
-2. Auth Service validates against User Service (internal call)
-3. JWT token generated with `{username, role}` claims
-4. Token stored client-side, sent as `Authorization: Bearer <token>` on all requests
-5. API Gateway validates JWT and injects `X-User-Name` / `X-User-Role` headers for downstream services
+1. Client sends `POST /api/auth/login` with `{username, password}`
+2. Auth Service validates credentials against User Service
+3. JWT token returned with `{sub: username, role: UserRole}` claims (24h expiry)
+4. Client includes `Authorization: Bearer <token>` on all subsequent requests
+5. API Gateway validates the JWT and injects `X-User-Name`, `X-User-Id`, `X-User-Role` headers for downstream services
+
+### Public Endpoints (no token required)
+
+| Method | Path                        | Description       |
+| ------ | --------------------------- | ----------------- |
+| POST   | `/api/auth/login`           | Login             |
+| GET    | `/api/auth/test`            | Health check      |
+| GET    | `/api/auth/validate?token=` | Token validation  |
+| POST   | `/api/users/register`       | Register new user |
+
+All other endpoints require a valid JWT token.
 
 ---
 
 ## API Endpoints
 
-### Auth Service (8081)
+> For complete request/response schemas, see [MOBILE_API_REFERENCE.md](MOBILE_API_REFERENCE.md).
 
-| Method | Path                 | Description        |
-| ------ | -------------------- | ------------------ |
-| POST   | `/api/auth/login`    | Authenticate user  |
-| GET    | `/api/auth/validate` | Validate JWT token |
+### Auth Service — `/api/auth`
 
-### User Service (8082)
+| Method | Path                        | Auth   | Description       |
+| ------ | --------------------------- | ------ | ----------------- |
+| POST   | `/api/auth/login`           | Public | Login → JWT token |
+| GET    | `/api/auth/validate?token=` | Public | Validate token    |
+| GET    | `/api/auth/test`            | Public | Health check      |
 
-| Method | Path                          | Description       |
-| ------ | ----------------------------- | ----------------- |
-| POST   | `/api/users/register`         | Register new user |
-| GET    | `/api/users/{id}`             | Get user profile  |
-| GET    | `/api/users/search?username=` | Search user       |
-| GET    | `/api/users/alumni`           | Alumni directory  |
+### User Service — `/api/users`
 
-### Post Service (8083)
+| Method | Path                          | Auth     | Description           |
+| ------ | ----------------------------- | -------- | --------------------- |
+| POST   | `/api/users/register`         | Public   | Register new user     |
+| GET    | `/api/users/{id}`             | Required | Get user profile      |
+| GET    | `/api/users/search?username=` | Required | Find user by username |
+| GET    | `/api/users/alumni`           | Required | Alumni directory      |
 
-| Method | Path                      | Description       |
-| ------ | ------------------------- | ----------------- |
-| POST   | `/api/posts`              | Create post       |
-| GET    | `/api/posts`              | Get all posts     |
-| POST   | `/api/posts/{id}/like`    | Like a post       |
-| POST   | `/api/posts/{id}/comment` | Comment on a post |
+### Post Service — `/api/posts`
 
-### Job Service (8084)
+| Method | Path                      | Auth     | Description      |
+| ------ | ------------------------- | -------- | ---------------- |
+| POST   | `/api/posts`              | Required | Create post      |
+| GET    | `/api/posts`              | Required | Get all posts    |
+| POST   | `/api/posts/{id}/like`    | Required | Like/unlike post |
+| POST   | `/api/posts/{id}/comment` | Required | Add comment      |
 
-| Method | Path                          | Description               |
-| ------ | ----------------------------- | ------------------------- |
-| POST   | `/api/jobs`                   | Create job (ALUMNI/ADMIN) |
-| GET    | `/api/jobs`                   | List all jobs             |
-| GET    | `/api/jobs/{id}`              | Get job details           |
-| POST   | `/api/jobs/{id}/apply`        | Apply for job (STUDENT)   |
-| GET    | `/api/jobs/{id}/applications` | Get applications          |
+### Job Service — `/api/jobs`
+
+| Method | Path                                   | Auth         | Description         |
+| ------ | -------------------------------------- | ------------ | ------------------- |
+| POST   | `/api/jobs`                            | ALUMNI/ADMIN | Create job listing  |
+| GET    | `/api/jobs`                            | Required     | List all jobs       |
+| GET    | `/api/jobs/{id}`                       | Required     | Get job details     |
+| POST   | `/api/jobs/{id}/apply`                 | STUDENT      | Apply for job       |
+| GET    | `/api/jobs/{id}/applications`          | Required     | Job applications    |
+| GET    | `/api/jobs/user/{userId}/applications` | Required     | User's applications |
+
+### Event Service — `/api/events`
+
+| Method | Path                         | Auth         | Description     |
+| ------ | ---------------------------- | ------------ | --------------- |
+| POST   | `/api/events`                | ALUMNI/ADMIN | Create event    |
+| GET    | `/api/events`                | Required     | List events     |
+| GET    | `/api/events/upcoming`       | Required     | Upcoming events |
+| GET    | `/api/events/{id}`           | Required     | Event details   |
+| PUT    | `/api/events/{id}`           | Required     | Update event    |
+| DELETE | `/api/events/{id}`           | Required     | Delete event    |
+| POST   | `/api/events/{id}/rsvp`      | Required     | RSVP to event   |
+| GET    | `/api/events/{id}/attendees` | Required     | Attendee list   |
+
+### Research Service — `/api/research`
+
+| Method | Path                          | Auth         | Description                         |
+| ------ | ----------------------------- | ------------ | ----------------------------------- |
+| POST   | `/api/research`               | ALUMNI/ADMIN | Upload research                     |
+| GET    | `/api/research`               | Required     | List (filter: `category`, `search`) |
+| GET    | `/api/research/{id}`          | Required     | Details                             |
+| PUT    | `/api/research/{id}`          | Required     | Update                              |
+| DELETE | `/api/research/{id}`          | Required     | Delete                              |
+| GET    | `/api/research/user/{userId}` | Required     | By author                           |
+| GET    | `/api/research/tag/{tag}`     | Required     | By tag                              |
+| POST   | `/api/research/{id}/version`  | Required     | Add version                         |
+| GET    | `/api/research/{id}/versions` | Required     | Version history                     |
+| POST   | `/api/research/{id}/cite`     | Required     | Get citations (BibTeX, APA)         |
+| POST   | `/api/research/{id}/download` | Required     | Track download                      |
+
+### Messaging Service — `/api/conversations`
+
+| Method | Path                                 | Auth     | Description          |
+| ------ | ------------------------------------ | -------- | -------------------- |
+| POST   | `/api/conversations`                 | Required | Start conversation   |
+| GET    | `/api/conversations`                 | Required | List conversations   |
+| GET    | `/api/conversations/{id}`            | Required | Conversation details |
+| GET    | `/api/conversations/{id}/messages`   | Required | Paginated messages   |
+| PUT    | `/api/conversations/{id}/read`       | Required | Mark read            |
+| DELETE | `/api/conversations/{id}`            | Required | Delete conversation  |
+| GET    | `/api/conversations/online?userIds=` | Required | Online status        |
+
+**WebSocket:** `ws://localhost:8080/ws/chat` — STOMP over WebSocket with SockJS fallback.
+
+| STOMP Destination                  | Purpose               |
+| ---------------------------------- | --------------------- |
+| `/app/chat/send`                   | Send message          |
+| `/app/chat/typing`                 | Typing indicator      |
+| `/topic/messages/{conversationId}` | Subscribe to messages |
+| `/topic/typing/{conversationId}`   | Subscribe to typing   |
+
+### Notification Service — `/api/notifications`
+
+| Method | Path                              | Auth     | Description        |
+| ------ | --------------------------------- | -------- | ------------------ |
+| GET    | `/api/notifications`              | Required | User notifications |
+| PUT    | `/api/notifications/{id}/read`    | Required | Mark as read       |
+| PUT    | `/api/notifications/read-all`     | Required | Mark all read      |
+| GET    | `/api/notifications/unread-count` | Required | Unread count       |
+| DELETE | `/api/notifications/{id}`         | Required | Delete             |
+
+### Analytics Service — `/api/analytics` (ADMIN only)
+
+| Method | Path                                     | Description         |
+| ------ | ---------------------------------------- | ------------------- |
+| GET    | `/api/analytics/overview`                | Platform overview   |
+| GET    | `/api/analytics/users`                   | User metrics        |
+| GET    | `/api/analytics/posts`                   | Post engagement     |
+| GET    | `/api/analytics/jobs`                    | Job market metrics  |
+| GET    | `/api/analytics/events`                  | Event metrics       |
+| GET    | `/api/analytics/research`                | Research metrics    |
+| GET    | `/api/analytics/messages`                | Messaging metrics   |
+| GET    | `/api/analytics/timeline?from=&to=`      | Historical timeline |
+| GET    | `/api/analytics/export?format=csv&type=` | CSV export          |
+
+### Mentorship Service — `/api/mentorship`
+
+| Method | Path                                          | Auth         | Description           |
+| ------ | --------------------------------------------- | ------------ | --------------------- |
+| POST   | `/api/mentorship/profile`                     | Required     | Create/update profile |
+| GET    | `/api/mentorship/profile`                     | Required     | Own profile           |
+| GET    | `/api/mentorship/profile/{userId}`            | Required     | User's profile        |
+| GET    | `/api/mentorship/matches`                     | Required     | AI-scored matches     |
+| GET    | `/api/mentorship/matches/advanced`            | Required     | Filtered matches      |
+| POST   | `/api/mentorship/request`                     | STUDENT      | Send request          |
+| PUT    | `/api/mentorship/request/{id}`                | ALUMNI/ADMIN | Accept/reject         |
+| GET    | `/api/mentorship/requests`                    | Required     | List requests         |
+| GET    | `/api/mentorship/relationships`               | Required     | Active relationships  |
+| PUT    | `/api/mentorship/relationships/{id}`          | Required     | Update relationship   |
+| DELETE | `/api/mentorship/relationships/{id}`          | Required     | End relationship      |
+| POST   | `/api/mentorship/relationships/{id}/feedback` | Required     | Submit feedback       |
+| GET    | `/api/mentorship/relationships/{id}/feedback` | Required     | View feedback         |
+
+---
+
+## Event-Driven Communication
+
+Services communicate asynchronously via RabbitMQ:
+
+| Event               | Published By     | Consumed By          |
+| ------------------- | ---------------- | -------------------- |
+| `user.registered`   | User Service     | Notification Service |
+| `post.created`      | Post Service     | Notification Service |
+| `post.liked`        | Post Service     | Notification Service |
+| `post.commented`    | Post Service     | Notification Service |
+| `job.created`       | Job Service      | Notification Service |
+| `job.applied`       | Job Service      | Notification Service |
+| `event.created`     | Event Service    | Notification Service |
+| `event.rsvp`        | Event Service    | Notification Service |
+| `research.uploaded` | Research Service | Notification Service |
+
+---
+
+## Task Commands
+
+| Command              | Description                                |
+| -------------------- | ------------------------------------------ |
+| `task start`         | Start everything (infra → build → run all) |
+| `task stop`          | Stop infrastructure containers             |
+| `task infra`         | Start only databases and RabbitMQ          |
+| `task build:backend` | Build all backend JARs                     |
+| `task run:all`       | Run all services + frontend in parallel    |
+| `task run:backend`   | Run only backend services                  |
+| `task run:frontend`  | Run frontend dev server                    |
+| `task health`        | Check health of all services               |
+| `task docker:up`     | Production mode (Docker)                   |
+| `task clean`         | Remove all build artifacts                 |
+
+See [GETTING_STARTED.md](GETTING_STARTED.md) for the complete list.
 
 ---
 
@@ -225,7 +374,7 @@ docker-compose -f docker-compose.prod.yml up --build
 
 Interactive architecture diagrams built as React components (in `designs/`):
 
-1. **SOA Diagram** — Service-Oriented Architecture with all 10 services, endpoints, and RabbitMQ events
+1. **SOA Diagram** — Service-Oriented Architecture with all services, endpoints, and RabbitMQ events
 2. **Enterprise Architecture** — Full layered architecture from client to cloud infrastructure
 3. **Deployment Diagram** — AWS cloud deployment with ECS Fargate, RDS, DocumentDB
 4. **Product Modularity** — Module breakdown with shared components and dependencies
@@ -235,37 +384,29 @@ Interactive architecture diagrams built as React components (in `designs/`):
 
 ## Containerization
 
-Each service has a `Dockerfile` for independent deployment.
-
 ```bash
-# Build all backend services
-cd backend
-mvn clean package -DskipTests
+# Build and run everything in Docker (production)
+task docker:build
+task docker:up
 
-# Build individual Docker images
-docker build -t decp-api-gateway ./api-gateway
-docker build -t decp-auth-service ./auth-service
-docker build -t decp-user-service ./user-service
-docker build -t decp-post-service ./post-service
-docker build -t decp-job-service ./job-service
-
-# Build frontend
-docker build -t decp-web-client ./frontend/web-client
+# Or manually
+docker compose -f docker-compose.prod.yml up --build -d
 ```
 
 ---
 
-## Service URLs
+## Documentation
 
-| Service                  | URL                                     |
-| ------------------------ | --------------------------------------- |
-| Web Client               | http://localhost:3000                   |
-| API Gateway              | http://localhost:8080                   |
-| RabbitMQ Management      | http://localhost:15672 (guest/guest)    |
-| Swagger UI (per service) | http://localhost:{port}/swagger-ui.html |
+| Document                                 | Description                                  |
+| ---------------------------------------- | -------------------------------------------- | --- |
+| [GETTING_STARTED.md](GETTING_STARTED.md) | Developer setup guide with all Task commands |     |
 
 ---
 
 ## Contributing
 
-See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the detailed implementation plan, phases, and service specifications for new services.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit changes (`git commit -m "Add my feature"`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
