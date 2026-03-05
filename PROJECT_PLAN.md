@@ -11,7 +11,7 @@
 
 ### Development Approach: **Backend-First** ✨
 
-**Strategy:** Build all backend services (Phases 2-7) and complete Phase 1 hardening first. 
+**Strategy:** Build all backend services (Phases 2-7) and complete Phase 1 hardening first.
 Frontend development (Phase 8) starts only after Phase 2 (Event Service) completion.
 This ensures framework stability and reduces frontend rework.
 
@@ -26,27 +26,27 @@ This ensures framework stability and reduces frontend rework.
 | Job Service         | 8084 | ✅ Done | Jobs, applications, role-based access             |
 | Docker Compose      | —    | ✅ Done | Dev + Production configs                          |
 | Design Diagrams (5) | —    | ✅ Done | SOA, Enterprise, Deployment, Modularity, Research |
-| Phase 1 (Hardening) | —    | 🔄 50% | Security, infrastructure, docs (6/12 tasks)      |
+| Phase 1 (Hardening) | —    | 🔄 50%  | Security, infrastructure, docs (6/12 tasks)       |
 
 ### 🔨 To Be Implemented (Backend-First)
 
 **Next Priority (Complete these first):**
 
-| Component            | Port | Phase | Status |
-| -------------------- | ---- | ----- | ------ |
-| Event Service        | 8085 | 2 | 📌 Next (Start immediately) |
-| Notification Service | 8088 | 3 | ⏳ After Phase 2 |
-| Messaging Service    | 8087 | 4 | ⏳ After Phase 3 |
-| Research Service     | 8086 | 5 | ⏳ After Phase 4 |
-| Analytics Service    | 8089 | 6 | ⏳ After Phase 5 |
-| Mentorship Service   | 8090 | 7 | ⏳ After Phase 6 |
+| Component            | Port | Phase | Status                      |
+| -------------------- | ---- | ----- | --------------------------- |
+| Event Service        | 8085 | 2     | 📌 Next (Start immediately) |
+| Notification Service | 8088 | 3     | ⏳ After Phase 2            |
+| Messaging Service    | 8087 | 4     | ⏳ After Phase 3            |
+| Research Service     | 8086 | 5     | ⏳ After Phase 4            |
+| Analytics Service    | 8089 | 6     | ⏳ After Phase 5            |
+| Mentorship Service   | 8090 | 7     | ⏳ After Phase 6            |
 
 **Then, after Phase 2:**
 
-| Component            | Port | Phase | Status |
-| -------------------- | ---- | ----- | ------ |
-| Web Client (React)   | 3000 | 8 | ⏳ Starts after Event Service ready |
-| Testing & Deployment | — | 9 | ⏳ Final phase |
+| Component            | Port | Phase | Status                              |
+| -------------------- | ---- | ----- | ----------------------------------- |
+| Web Client (React)   | 3000 | 8     | ⏳ Starts after Event Service ready |
+| Testing & Deployment | —    | 9     | ⏳ Final phase                      |
 
 ### 🔧 Phase 1 Hardening (In Progress)
 
