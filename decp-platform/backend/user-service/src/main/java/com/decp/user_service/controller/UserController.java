@@ -56,11 +56,13 @@ public class UserController {
         // Generate the secure JWT token!
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
-        // Return the token in a clean JSON format
+        // Return the token and the user details in a clean JSON format
         return ResponseEntity.ok(Map.of(
                 "message", "Welcome back, " + user.getName() + "!",
                 "token", token,
-                "role", user.getRole().name()
+                "role", user.getRole().name(),
+                "id", user.getId(),    // <-- Added this
+                "name", user.getName() // <-- Added this
         ));
     }
 }
