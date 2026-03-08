@@ -2,29 +2,65 @@ package com.decp.user_service.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Data // Lombok: Generates getters, setters, toString, equals, and hashCode
-@NoArgsConstructor // Lombok: Generates the empty constructor Hibernate needs
-@AllArgsConstructor // Lombok: Generates a constructor with all fields
-@Builder // Lombok: Allows us to build objects easily later
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(length = 100)
+    private String department;
+
+    @Column(name = "graduation_year")
+    private Integer graduationYear;
+
+    @Column(name = "research_interests", columnDefinition = "TEXT")
+    private String researchInterests; // JSON array as text
+
+    @Column(name = "course_projects", columnDefinition = "TEXT")
+    private String courseProjects; // JSON array as text
+
+    @Column(columnDefinition = "VARCHAR(255) DEFAULT 'ACTIVE'")
+    private String status = "ACTIVE";
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

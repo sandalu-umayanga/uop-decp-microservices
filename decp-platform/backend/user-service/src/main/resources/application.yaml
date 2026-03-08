@@ -6,7 +6,7 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:mysql://localhost:3308/decp_users?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3308/decp_users?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: root
     password: rootpassword
     driver-class-name: com.mysql.cj.jdbc.Driver

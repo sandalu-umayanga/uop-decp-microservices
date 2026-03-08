@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: decp-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: decp_users
+      MYSQL_USER: decp_admin
+      MYSQL_PASSWORD: decp_password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - decp-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: decp-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - decp-network
+
+  api-gateway:
+    build:
+      context: ./decp-platform/backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      - USER_SERVICE_URL=http://user-service:8081
+      - FEED_SERVICE_URL=http://feed-service:8082
+      - CAREER_SERVICE_URL=http://career-service:8083
+    ports:
+      - "8088:8080"
+    networks:
+      - decp-network
+    depends_on:
+      - user-service
+      - feed-service
+      - career-service
+
+  user-service:
+    build:
+      context: ./decp-platform/backend/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/decp_users?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    networks:
+      - decp-network
+    depends_on:
+      - mysql-db
+
+  feed-service:
+    build:
+      context: ./decp-platform/backend/feed-service
+      dockerfile: Dockerfile
+    container_name: feed-service
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://root:rootpassword@mongodb:27017/decp_feed?authSource=admin
+    networks:
+      - decp-network
+    depends_on:
+      - mongodb
+
+  career-service:
+    build:
+      context: ./decp-platform/backend/career-service
+      dockerfile: Dockerfile
+    container_name: career-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/decp_careers?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    networks:
+      - decp-network
+    depends_on:
+      - mysql-db
+
+  web-client:
+    build:
+      context: ./decp-platform/web-client
+      dockerfile: Dockerfile
+    container_name: web-client
+    ports:
+      - "80:80"
+    networks:
+      - decp-network
+    depends_on:
+      - api-gateway
+
+volumes:
+  mysql_data:
+  mongodb_data:
+
+networks:
+  decp-network:
+    driver: bridge

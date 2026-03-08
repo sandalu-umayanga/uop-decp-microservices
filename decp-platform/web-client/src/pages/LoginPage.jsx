@@ -1,76 +1,61 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function LoginPage() {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
-    const [message, setMessage] = useState('');
-    const navigate = useNavigate(); // Used to redirect the user after login
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            // Send login request to the API Gateway
-            const response = await axios.post('http://localhost:8080/api/users/login', credentials);
-
-            // Extract the data from the backend response
-            const { token, role, id, name, message: successMsg } = response.data;
-
-            // Save everything to the browser's local storage!
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', role);
-            localStorage.setItem('userId', id);     // <-- Added this
-            localStorage.setItem('userName', name); // <-- Added this
-
-            setMessage(successMsg);
-
-            // Redirect to the Feed page after 1 second
-            setTimeout(() => {
-                navigate('/feed');
-            }, 1000);
-
-        } catch (error) {
-            if (error.response) {
-                // This catches the 401 Unauthorized errors from your Spring Boot backend
-                setMessage(error.response.data);
-            } else {
-                setMessage("Network error. Is the Gateway running?");
-            }
+            const response = await axios.post('/api/users/login', credentials);
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('role', response.data.role);
+            localStorage.setItem('userId', response.data.id);
+            localStorage.setItem('userName', response.data.name);
+            navigate('/feed');
+        } catch (err) {
+            setError('Invalid email or password. Please try again.');
         }
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>
-            <h2>Login to DECP</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="auth-container">
+            <div className="card" style={{ width: '400px', textAlign: 'center' }}>
+                <img src="/logoNoBack.png" alt="DECP Logo" style={{ height: '80px', marginBottom: '10px' }} />
+                <h2>Welcome Back</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Sign in to continue to UniConnect</p>
+                
+                {error && <p style={{ color: 'var(--danger-color)', marginBottom: '15px' }}>{error}</p>}
+                
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                    <div className="form-group">
+                        <label className="label">University Email</label>
+                        <input type="email" name="email" className="input" placeholder="e.g. name@eng.pdn.ac.lk" required
+                               onChange={handleChange} value={credentials.email} />
+                    </div>
 
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="University Email"
-                    required
-                    onChange={handleChange}
-                    value={credentials.email}
-                />
+                    <div className="form-group">
+                        <label className="label">Password</label>
+                        <input type="password" name="password" className="input" placeholder="Enter your password" required
+                               onChange={handleChange} value={credentials.password} />
+                    </div>
 
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    required
-                    onChange={handleChange}
-                    value={credentials.password}
-                />
-
-                <button type="submit" style={{ padding: '10px', cursor: 'pointer' }}>Login</button>
-            </form>
-
-            {/* Display error or success messages */}
-            {message && <p style={{ marginTop: '20px', fontWeight: 'bold' }}>{message}</p>}
+                    <button type="submit" className="btn btn-primary" style={{ marginTop: '10px' }}>
+                        Login
+                    </button>
+                </form>
+                
+                <p style={{ marginTop: '20px', fontSize: '0.9rem' }}>
+                    New to DECP? <Link to="/register" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>Create Account</Link>
+                </p>
+            </div>
         </div>
     );
 }

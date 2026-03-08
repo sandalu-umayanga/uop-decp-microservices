@@ -13,5 +13,5 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByJobId(Long jobId);
 
     // For the Student: "Show me all the jobs I've applied to"
-    List<JobApplication> findByApplicantId(String applicantId);
+    List<JobApplication> findByApplicantId(Long applicantId);
 }

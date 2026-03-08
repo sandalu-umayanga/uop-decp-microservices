@@ -5,5 +5,6 @@ spring:
   application:
     name: feed-service
 
-  mongodb:
-    uri: mongodb://root:rootpassword@localhost:27018/decp_feed?authSource=admin
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://root:rootpassword@localhost:27018/decp_feed?authSource=admin}

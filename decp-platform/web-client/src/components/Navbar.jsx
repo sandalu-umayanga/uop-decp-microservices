@@ -1,63 +1,52 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
     const navigate = useNavigate();
-
-    // Check if the user is currently logged in
+    const location = useLocation();
     const token = localStorage.getItem('token');
+    const userName = localStorage.getItem('userName');
 
     const handleLogout = () => {
-        // 1. Destroy the VIP pass and user data
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userName');
-
-        // 2. Kick them back to the login screen
+        localStorage.clear();
         navigate('/login');
     };
 
+    const isActive = (path) => location.pathname === path ? 'nav-link active' : 'nav-link';
+
     return (
-        <nav style={{
-            display: 'flex',
-            gap: '15px',
-            padding: '15px',
-            backgroundColor: '#f4f4f4',
-            borderBottom: '1px solid #ddd',
-            alignItems: 'center'
-        }}>
-            <strong style={{ marginRight: 'auto', fontSize: '1.2em' }}>DECP</strong>
+        <nav className="navbar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: 'auto' }}>
+                <img src="/logoNoBack.png" alt="DECP Logo" style={{ height: '35px' }} />
+                <Link to="/" style={{ textDecoration: 'none', color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '1.4rem' }}>
+                    UniConnect
+                </Link>
+            </div>
 
-            <Link to="/" style={{ textDecoration: 'none', color: '#333' }}>Home</Link>
-
-            {/* Conditional Rendering: Show different links based on login status */}
-            {token ? (
-                <>
-                    <Link to="/feed" style={{ textDecoration: 'none', color: '#333' }}>Feed</Link>
-
-                    {/* --- NEW CAREERS LINK --- */}
-                    <Link to="/careers" style={{ textDecoration: 'none', color: '#333' }}>Careers</Link>
-
-                    <button
-                        onClick={handleLogout}
-                        style={{
-                            padding: '5px 10px',
-                            cursor: 'pointer',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px'
-                        }}
-                    >
-                        Logout
-                    </button>
-                </>
-            ) : (
-                <>
-                    <Link to="/login" style={{ textDecoration: 'none', color: '#333' }}>Login</Link>
-                    <Link to="/register" style={{ textDecoration: 'none', color: '#333' }}>Register</Link>
-                </>
-            )}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <Link to="/" className={isActive('/')}>Home</Link>
+                
+                {token ? (
+                    <>
+                        <Link to="/feed" className={isActive('/feed')}>Feed</Link>
+                        <Link to="/careers" className={isActive('/careers')}>Careers</Link>
+                        <Link to="/profile" className={isActive('/profile')}>Profile</Link>
+                        
+                        <div style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>
+                                Hi, {userName}
+                            </span>
+                            <button onClick={handleLogout} className="btn btn-danger" style={{ padding: '6px 12px' }}>
+                                Logout
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login" className={isActive('/login')}>Login</Link>
+                        <Link to="/register" className={isActive('/register')}>Register</Link>
+                    </>
+                )}
+            </div>
         </nav>
     );
 }

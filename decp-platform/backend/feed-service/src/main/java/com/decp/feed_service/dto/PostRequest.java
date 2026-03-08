@@ -6,5 +6,6 @@ import lombok.Data;
 public class PostRequest {
     private Long authorId;
     private String authorName;
-    private String content;
+    private String text;
+    private String mediaUrl;
 }

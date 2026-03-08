@@ -8,8 +8,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-@Document(collection = "posts") // Tells MongoDB to store this in a 'posts' collection
+@Document(collection = "posts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,13 +19,18 @@ import java.time.LocalDateTime;
 public class Post {
 
     @Id
-    private String id; // MongoDB uses String (ObjectId) by default instead of Long
-
-    private Long authorId; // The ID of the user from your MySQL database
-
-    private String authorName; // Storing the name here prevents us from having to ask the User Service for the name every single time we load the feed!
-
-    private String content;
-
+    private String id;
+    private Long authorId;
+    private String authorName;
+    private String text;
+    private String mediaUrl;
+    
+    @Builder.Default
+    private List<Long> likes = new ArrayList<>();
+    
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
+    
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

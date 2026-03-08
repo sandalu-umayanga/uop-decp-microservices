@@ -2,60 +2,52 @@ package com.decp.career_service.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @Entity
-@Table(name = "job_postings")
+@Table(name = "jobs")
 public class JobPosting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 200)
     private String title;
+
+    @Column(nullable = false, length = 200)
     private String company;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false)
+    private String type; // JOB, INTERNSHIP
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
-    private String location;
-    private String employmentType; // e.g., "Internship", "Full-Time", "Contract"
-    private String applyLink;
+    @Column(name = "posted_by", nullable = false)
+    private Long postedBy;
 
-    // To track who posted this opportunity (e.g., an Alumni)
-    private String postedByUserId;
-    private String postedByUserName;
+    private LocalDate deadline;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // Automatically set the timestamp when the post is saved
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
-
-    // --- GETTERS AND SETTERS ---
-    // (If you are using @Data from Lombok, you can delete all of these!)
-
-    public void setId(Long id) { this.id = id; }
-
-    public void setTitle(String title) { this.title = title; }
-
-    public void setCompany(String company) { this.company = company; }
-
-    public void setDescription(String description) { this.description = description; }
-
-    public void setLocation(String location) { this.location = location; }
-
-    public void setEmploymentType(String employmentType) { this.employmentType = employmentType; }
-
-    public void setApplyLink(String applyLink) { this.applyLink = applyLink; }
-
-    public void setPostedByUserId(String postedByUserId) { this.postedByUserId = postedByUserId; }
-
-    public void setPostedByUserName(String postedByUserName) { this.postedByUserName = postedByUserName; }
-
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

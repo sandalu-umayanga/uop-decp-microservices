@@ -9,33 +9,42 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "job_applications")
+@Table(name = "applications")
 public class JobApplication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // We store the ID of the job they are applying to
+    @Column(name = "job_id", nullable = false)
     private Long jobId;
 
-    // Who is applying?
-    private String applicantId;
-    private String applicantName;
+    @Column(name = "applicant_id", nullable = false)
+    private Long applicantId;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", name = "cover_letter")
     private String coverLetter;
 
-    // A URL to their Google Drive or Portfolio
-    private String resumeLink;
+    @Column(name = "resume_url")
+    private String resumeUrl;
 
-    // e.g., "PENDING", "REVIEWED", "REJECTED", "INTERVIEW"
-    private String status = "PENDING";
+    @Column(name = "status", columnDefinition = "VARCHAR(255) DEFAULT 'SUBMITTED'")
+    private String status = "SUBMITTED";
 
-    private LocalDateTime appliedAt;
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.appliedAt = LocalDateTime.now();
+        this.submittedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ export default function Register() {
         role: 'STUDENT'
     });
     const [message, setMessage] = useState('');
+    const [status, setStatus] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,43 +18,82 @@ export default function Register() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage('');
+        setStatus('');
         try {
-            // Send the POST request to your API Gateway!
-            const response = await axios.post('http://localhost:8080/api/users/register', formData);
-            setMessage(response.data); // "User registered successfully..."
+            const response = await axios.post('/api/users/register', formData);
+            setMessage(`Success! Welcome, ${response.data.name}. You can now login.`);
+            setStatus('success');
+            setFormData({ name: '', email: '', password: '', role: 'STUDENT' });
         } catch (error) {
-            if (error.response) {
-                setMessage(error.response.data); // "Error: Email is already registered!"
+            setStatus('error');
+            if (error.response && typeof error.response.data === 'string') {
+                setMessage(error.response.data);
+            } else if (error.response && error.response.data.message) {
+                setMessage(error.response.data.message);
             } else {
-                setMessage("Network error. Is the Gateway running?");
+                setMessage("An error occurred. Is the service running?");
             }
         }
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>
-            <h2>Create DECP Account</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="auth-container">
+            <div className="card" style={{ width: '450px', textAlign: 'center' }}>
+                <img src="/logoNoBack.png" alt="DECP Logo" style={{ height: '80px', marginBottom: '10px' }} />
+                <h2>Join UniConnect</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Join the community of students, alumni, and admins.</p>
 
-                <input type="text" name="name" placeholder="Full Name" required
-                       onChange={handleChange} value={formData.name} />
+                {message && (
+                    <p style={{ 
+                        backgroundColor: status === 'success' ? '#e7f8ed' : '#f8d7da',
+                        color: status === 'success' ? '#2db84c' : '#dc3545',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '20px',
+                        fontWeight: 'bold'
+                    }}>
+                        {message}
+                    </p>
+                )}
 
-                <input type="email" name="email" placeholder="University Email" required
-                       onChange={handleChange} value={formData.email} />
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                    <div className="form-group">
+                        <label className="label">Full Name</label>
+                        <input type="text" name="name" className="input" placeholder="e.g. John Doe" required
+                               onChange={handleChange} value={formData.name} />
+                    </div>
 
-                <input type="password" name="password" placeholder="Password" required
-                       onChange={handleChange} value={formData.password} />
+                    <div className="form-group">
+                        <label className="label">University Email</label>
+                        <input type="email" name="email" className="input" placeholder="e.g. john@eng.pdn.ac.lk" required
+                               onChange={handleChange} value={formData.email} />
+                    </div>
 
-                <select name="role" onChange={handleChange} value={formData.role}>
-                    <option value="STUDENT">Student</option>
-                    <option value="ALUMNI">Alumni</option>
-                    <option value="ADMIN">Admin</option>
-                </select>
+                    <div className="form-group">
+                        <label className="label">Password</label>
+                        <input type="password" name="password" className="input" placeholder="Min 6 characters" required
+                               onChange={handleChange} value={formData.password} />
+                    </div>
 
-                <button type="submit" style={{ padding: '10px', cursor: 'pointer' }}>Register</button>
-            </form>
+                    <div className="form-group">
+                        <label className="label">I am a...</label>
+                        <select name="role" className="select" onChange={handleChange} value={formData.role}>
+                            <option value="STUDENT">Student</option>
+                            <option value="ALUMNI">Alumni</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                    </div>
 
-            {message && <p style={{ marginTop: '20px', fontWeight: 'bold' }}>{message}</p>}
+                    <button type="submit" className="btn btn-primary" style={{ marginTop: '10px' }}>
+                        Create Account
+                    </button>
+                </form>
+
+                <p style={{ marginTop: '20px', fontSize: '0.9rem' }}>
+                    Already have an account? <Link to="/login" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>Login Here</Link>
+                </p>
+            </div>
         </div>
     );
 }

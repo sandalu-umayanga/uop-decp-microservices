@@ -7,7 +7,7 @@ spring:
 
   datasource:
     # Notice the new createDatabaseIfNotExist=true flag right after the database name!
-    url: jdbc:mysql://localhost:3308/decp_careers?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3308/decp_careers?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: root
     password: rootpassword
     driver-class-name: com.mysql.cj.jdbc.Driver
