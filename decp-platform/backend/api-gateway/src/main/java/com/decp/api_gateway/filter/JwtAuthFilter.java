@@ -23,7 +23,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
+        // Allow CORS preflight requests to pass through without a token
+        if (request.getMethod().equals("OPTIONS")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        // ------------------------------------------------------------------
         String path = request.getRequestURI();
 
         // 1. Allow login and registration requests to pass through without a token
