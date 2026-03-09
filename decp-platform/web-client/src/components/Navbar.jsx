@@ -16,54 +16,29 @@ export default function Navbar() {
     return (
         <nav className="navbar">
             <div className="nav-content">
-                <Link to="/" className="nav-logo">
-                    in
+                <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', marginRight: 'auto' }}>
+                    <div style={{ background: 'var(--uc-primary)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '22px' }}>U</div>
+                    <span style={{ color: 'var(--uc-text-main)', fontWeight: '800', fontSize: '22px', letterSpacing: '-1px' }}>
+                        UniConnect
+                    </span>
                 </Link>
-                <div style={{ marginRight: 'auto', color: 'var(--linkedin-blue)', fontWeight: 'bold', fontSize: '18px' }}>
-                    UniConnect
-                </div>
 
-                <div style={{ display: 'flex', height: '100%' }}>
-                    <Link to="/" className={isActive('/')}>
-                        <span className="nav-icon">🏠</span>
-                        <span>Home</span>
-                    </Link>
-                    
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {token ? (
                         <>
-                            <Link to="/feed" className={isActive('/feed')}>
-                                <span className="nav-icon">📰</span>
-                                <span>Feed</span>
-                            </Link>
-                            <Link to="/network" className={isActive('/network')}>
-                                <span className="nav-icon">👥</span>
-                                <span>My Network</span>
-                            </Link>
-                            <Link to="/careers" className={isActive('/careers')}>
-                                <span className="nav-icon">💼</span>
-                                <span>Jobs</span>
-                            </Link>
-                            <Link to="/profile" className={isActive('/profile')}>
-                                <span className="nav-icon">👤</span>
-                                <span>Me</span>
-                            </Link>
+                            <Link to="/feed" className={isActive('/feed')}>Feed</Link>
+                            <Link to="/network" className={isActive('/network')}>Network</Link>
+                            <Link to="/careers" className={isActive('/careers')}>Careers</Link>
+                            <Link to="/profile" className={isActive('/profile')}>Profile</Link>
                             
-                            <div style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <button onClick={handleLogout} className="li-btn li-btn-ghost" style={{ fontSize: '12px' }}>
-                                    Logout
-                                </button>
-                            </div>
+                            <button onClick={handleLogout} className="uc-btn uc-btn-outline" style={{ marginLeft: '12px', padding: '8px 16px', borderRadius: '12px' }}>
+                                Logout
+                            </button>
                         </>
                     ) : (
                         <>
-                            <Link to="/login" className={isActive('/login')}>
-                                <span className="nav-icon">🔑</span>
-                                <span>Sign In</span>
-                            </Link>
-                            <Link to="/register" className={isActive('/register')}>
-                                <span className="nav-icon">📝</span>
-                                <span>Join Now</span>
-                            </Link>
+                            <Link to="/login" className={isActive('/login')}>Sign In</Link>
+                            <Link to="/register" className="uc-btn uc-btn-primary">Join Now</Link>
                         </>
                     )}
                 </div>

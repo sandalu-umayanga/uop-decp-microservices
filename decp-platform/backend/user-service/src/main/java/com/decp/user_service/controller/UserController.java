@@ -92,12 +92,21 @@ public class UserController {
         
         User user = optionalUser.get();
 
-        // Increment view count if the viewer is not the owner
-        if (viewerIdStr != null) {
-            Long viewerId = Long.parseLong(viewerIdStr);
-            if (!viewerId.equals(id)) {
-                user.setProfileViews(user.getProfileViews() + 1);
-                userRepository.save(user);
+        // Safety check for null profileViews (legacy data)
+        if (user.getProfileViews() == null) {
+            user.setProfileViews(0L);
+        }
+
+        // Increment view count if the viewer is not the owner and ID is valid
+        if (viewerIdStr != null && !viewerIdStr.equals("null")) {
+            try {
+                Long viewerId = Long.parseLong(viewerIdStr);
+                if (!viewerId.equals(id)) {
+                    user.setProfileViews(user.getProfileViews() + 1);
+                    userRepository.save(user);
+                }
+            } catch (NumberFormatException e) {
+                // Ignore invalid IDs
             }
         }
         
@@ -107,13 +116,13 @@ public class UserController {
             "id", user.getId(),
             "name", user.getName(),
             "email", user.getEmail(),
-            "role", user.getRole().name(),
+            "role", user.getRole() != null ? user.getRole().name() : "STUDENT",
             "bio", user.getBio() != null ? user.getBio() : "",
             "department", user.getDepartment() != null ? user.getDepartment() : "",
             "graduationYear", user.getGraduationYear() != null ? user.getGraduationYear() : 0,
             "profileViews", user.getProfileViews(),
             "connections", connections,
-            "createdAt", user.getCreatedAt() != null ? user.getCreatedAt() : ""
+            "createdAt", user.getCreatedAt() != null ? user.getCreatedAt() : LocalDateTime.now()
         ));
     }
 
@@ -128,7 +137,12 @@ public class UserController {
         if (updates.containsKey("name")) user.setName((String) updates.get("name"));
         if (updates.containsKey("bio")) user.setBio((String) updates.get("bio"));
         if (updates.containsKey("department")) user.setDepartment((String) updates.get("department"));
-        if (updates.containsKey("graduationYear")) user.setGraduationYear((Integer) updates.get("graduationYear"));
+        
+        if (updates.containsKey("graduationYear")) {
+            Object yr = updates.get("graduationYear");
+            if (yr instanceof Integer) user.setGraduationYear((Integer) yr);
+            else if (yr instanceof String) user.setGraduationYear(Integer.parseInt((String) yr));
+        }
         
         user.setUpdatedAt(LocalDateTime.now());
         User updatedUser = userRepository.save(user);
@@ -138,24 +152,26 @@ public class UserController {
 
     @PostMapping("/{id}/connect")
     public ResponseEntity<?> connect(@PathVariable Long id, @RequestHeader("X-User-Id") String userIdStr) {
-        Long currentUserId = Long.parseLong(userIdStr);
-        if (currentUserId.equals(id)) {
-            return ResponseEntity.badRequest().body("You cannot connect with yourself!");
+        try {
+            Long currentUserId = Long.parseLong(userIdStr);
+            if (currentUserId.equals(id)) {
+                return ResponseEntity.badRequest().body("You cannot connect with yourself!");
+            }
+
+            if (connectionRepository.findByUserIdAndConnectedUserId(currentUserId, id).isPresent()) {
+                return ResponseEntity.ok("Already connected!");
+            }
+
+            Connection c1 = Connection.builder().userId(currentUserId).connectedUserId(id).build();
+            Connection c2 = Connection.builder().userId(id).connectedUserId(currentUserId).build();
+            
+            connectionRepository.save(c1);
+            connectionRepository.save(c2);
+
+            return ResponseEntity.ok("Connected successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid connection request");
         }
-
-        // Check if already connected
-        if (connectionRepository.findByUserIdAndConnectedUserId(currentUserId, id).isPresent()) {
-            return ResponseEntity.ok("Already connected!");
-        }
-
-        // Bidi-connection for this prototype (LinkedIn style usually has requests, but we'll do direct follow/connect)
-        Connection c1 = Connection.builder().userId(currentUserId).connectedUserId(id).build();
-        Connection c2 = Connection.builder().userId(id).connectedUserId(currentUserId).build();
-        
-        connectionRepository.save(c1);
-        connectionRepository.save(c2);
-
-        return ResponseEntity.ok("Connected successfully!");
     }
 
     @GetMapping("/list")
