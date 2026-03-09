@@ -1,63 +1,78 @@
-# 15 — User Manual
+# 15 — User Manual (Index)
 
-## 1. Getting Started
-UniConnect (DECP) is accessible through a web browser. Ensure you are connected to the same network as the host server.
+> **UniConnect — Department Engagement & Career Platform (DECP)**
+> CO528 Applied Software Architecture · University of Peradeniya
 
-- **URL**: `http://localhost` (or your server's IP address)
+---
 
-## 2. Account Management
-### 2.1 Registration
+## Overview
+
+UniConnect (DECP) is accessible through a web browser. Navigate to `http://localhost` (or your server's IP / cloud domain) to get started.
+
+This document serves as the **index** for the comprehensive, role-specific user manuals. Each role has dedicated documentation covering every feature, workflow, and capability available to that user type.
+
+---
+
+## Role-Specific User Manuals
+
+| # | Manual | Audience | Document |
+|---|--------|----------|----------|
+| 1 | **Student Manual** | Current students of the department | [15a — Student](15a-user-manual-student.md) |
+| 2 | **Alumni Manual** | Past students / graduates | [15b — Alumni](15b-user-manual-alumni.md) |
+| 3 | **Admin Manual** | Platform administrators and moderators | [15c — Admin](15c-user-manual-admin.md) |
+| 4 | **System Admin / DevOps Manual** | Infrastructure engineers and system administrators | [15d — System Admin](15d-user-manual-sysadmin.md) |
+
+---
+
+## Quick-Start Summary
+
+### 1. Account Management
 1. Navigate to the **Register** page.
 2. Enter your full name, university email, and a secure password.
 3. Select your role: **Student**, **Alumni**, or **Admin**.
 4. Upon successful registration, you will be redirected to the Login page.
 
-### 2.2 Profile Management
+### 2. Profile Management
 1. After logging in, click the **Profile** link in the navigation bar.
-2. Here you can see your basic university details.
-3. Click **Edit My Profile** to update your:
-    - **Display Name**
-    - **Department** (e.g., Computer Engineering)
-    - **Graduation Year**
-    - **Biography** (Tell others about your interests and goals)
+2. Click **Edit Profile** to update your Display Name, Department, Graduation Year, and Biography.
+
+### 3. Department Feed
+- **Create**: Type your post in the "What's on your mind?" box and click **Post**.
+- **Like**: Click 👍 to like; click ❤️ to unlike.
+- **Comment**: Click 💬 to expand comments; type and press Enter or click Post.
+- **Manage**: Edit or Delete your own posts and comments.
+
+### 4. Careers & Jobs
+- **Students**: Browse listings and click **Apply Internally** to submit a cover letter + resume URL.
+- **Alumni / Admins**: Use the form at the top to post opportunities; click **View Applicants** to see applications.
+
+### 5. Networking
+- Browse members on the **Networking** page, search by name/department, and click **Connect**.
+
+### 6. Security & Privacy
+- Passwords are BCrypt-hashed and never stored in plain text.
+- Sessions last 24 hours (JWT). Always **Logout** on shared devices.
+- You can only edit/delete content you created.
 
 ---
 
-## 3. Social Interaction (Department Feed)
-The Feed is the central place to stay updated with department announcements and discussions.
+## Access Control Summary
 
-### 3.1 Creating a Post
-1. Type your update in the "What's happening?" box at the top of the Feed.
-2. Click **Post Announcement**.
-3. Your post will appear at the top of the Feed for all members to see.
-
-### 3.2 Interacting with Posts
-- **Like**: Click the 👍 button to show your support. It will toggle to ❤️ once liked.
-- **Comment**: Click the 💬 button to see existing comments and add your own.
-- **Reply**: You can reply to any comment by clicking the **Reply** link next to it.
-- **Manage**: If you created the post or comment, you will see **Edit** or **Delete** options to manage your content.
-
----
-
-## 4. Careers & Jobs
-This module connects students with professional opportunities posted by alumni and admins.
-
-### 4.1 For Students (Apply)
-1. Navigate to the **Careers** page.
-2. Browse through available jobs and internships.
-3. Click **Apply Internally** on any job that interests you.
-4. Fill out a brief **Cover Letter** and provide a link to your **Resume/Portfolio** (e.g., Google Drive link).
-5. Click **Submit Application**.
-
-### 4.2 For Alumni/Admins (Post & Track)
-1. Use the form at the top of the Careers page to post a new opportunity.
-2. Provide a clear title, company name, and detailed description.
-3. Once posted, you will see a **View Applicants** button on your specific job card.
-4. Clicking this opens a private **Applicant Dashboard** where you can see all students who applied, read their cover letters, and view their resumes.
+| Capability | Student | Alumni | Admin |
+|------------|---------|--------|-------|
+| Register & Login | ✅ | ✅ | ✅ |
+| Edit Profile | ✅ | ✅ | — |
+| Create Feed Posts | ✅ | ✅ | Monitor |
+| Like & Comment | ✅ | ✅ | Monitor |
+| Moderate Any Post | — | — | ✅ |
+| Apply for Jobs | ✅ | — | — |
+| Post Jobs | — | ✅ | ✅ |
+| View Applicants | — | ✅ (own) | ✅ (own) |
+| Manage Users | — | — | ✅ |
+| Assign Roles | — | — | ✅ |
 
 ---
 
-## 5. Security & Privacy
-- **Ownership**: You can only edit or delete content (posts, comments, jobs) that you created.
-- **Data Protection**: Your password is encrypted using high-security hashing (BCrypt).
-- **Session**: Your login remains active for 24 hours (JWT expiration). Always remember to **Logout** when using a shared computer.
+*For comprehensive instructions, please refer to the role-specific manual linked above.*
+
+*Last updated: March 2026 · UniConnect DECP v1.0*
