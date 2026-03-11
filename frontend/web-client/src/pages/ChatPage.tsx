@@ -17,17 +17,32 @@ export default function ChatPage() {
     selectConversation,
     sendMessage,
     startConversation,
+    markConversationRead,
+    clearCurrentConversation,
   } = useChat();
   const [input, setInput] = useState("");
   const [showUserSearch, setShowUserSearch] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
 
+  // Handle active conversation read status
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (currentConversation) {
+      markConversationRead(currentConversation.id);
+    }
+  }, [currentConversation?.id, markConversationRead]);
+
+  // Cleanup active conversation on unmount
+  useEffect(() => {
+    return () => clearCurrentConversation();
+  }, [clearCurrentConversation]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
@@ -39,18 +54,44 @@ export default function ChatPage() {
 
   const handleStartNew = async (selectedUser: User) => {
     if (!user) return;
-    const conv = await startConversation([user.id, selectedUser.id]);
-    await selectConversation(conv);
+
+    // Check if conversation already exists
+    const existingConv = conversations.find(
+      (conv) =>
+        conv.participants.length === 2 &&
+        conv.participants.includes(user.id) &&
+        conv.participants.includes(selectedUser.id),
+    );
+
+    if (existingConv) {
+      await selectConversation(existingConv);
+      setShowUserSearch(false);
+      return;
+    }
+
+    setStartingChat(true);
+    try {
+      const conv = await startConversation(
+        [user.id, selectedUser.id],
+        [user.fullName, selectedUser.fullName],
+      );
+      await selectConversation(conv);
+      await loadConversations();
+    } catch (err) {
+      console.error("Failed to start conversation:", err);
+    } finally {
+      setStartingChat(false);
+    }
   };
 
   if (!user) return null;
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-64px)] max-w-7xl">
+    <div className="mx-auto flex h-[calc(100vh-64px)] max-w-7xl dark:bg-gray-900">
       {/* Sidebar */}
-      <div className="flex w-80 flex-shrink-0 flex-col border-r border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+      <div className="flex w-80 flex-shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Messages</h2>
           <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-red-400"}`}
@@ -65,7 +106,7 @@ export default function ChatPage() {
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           {conversations.length === 0 ? (
-            <p className="p-4 text-center text-sm text-gray-500">
+            <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
               No conversations yet
             </p>
           ) : (
@@ -83,12 +124,12 @@ export default function ChatPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex flex-1 flex-col bg-gray-50">
+      <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-900/50">
         {currentConversation ? (
           <>
             {/* Chat Header */}
-            <div className="border-b border-gray-200 bg-white px-6 py-4">
-              <h3 className="font-semibold text-gray-900">
+            <div className="border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
                 {currentConversation.participantNames
                   .filter(
                     (_, i) => currentConversation.participants[i] !== user.id,
@@ -112,13 +153,13 @@ export default function ChatPage() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-gray-200 bg-white p-4">
+            <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
               <form onSubmit={handleSend} className="flex gap-3">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
                   autoFocus
                 />
                 <button
@@ -135,7 +176,7 @@ export default function ChatPage() {
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
               <svg
-                className="mx-auto h-16 w-16 text-gray-300"
+                className="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -147,10 +188,10 @@ export default function ChatPage() {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
+              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-300">
                 Your Messages
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
                 Select a conversation or start a new one
               </p>
             </div>
@@ -163,6 +204,7 @@ export default function ChatPage() {
         onClose={() => setShowUserSearch(false)}
         onSelectUser={handleStartNew}
         title="Start New Conversation"
+        loading={startingChat}
       />
     </div>
   );

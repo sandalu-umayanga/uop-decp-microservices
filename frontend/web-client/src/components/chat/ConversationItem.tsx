@@ -23,25 +23,31 @@ export default function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
-        selected ? "bg-primary-50" : "hover:bg-gray-50"
-      }`}
+      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${selected ? "bg-primary-50 dark:bg-primary-900/50" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        }`}
     >
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
         {displayName.charAt(0).toUpperCase()}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-gray-900">
+        <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
           {displayName}
         </p>
-        <p className="truncate text-xs text-gray-500">
+        <p className="truncate text-xs text-gray-500 dark:text-gray-400">
           {conversation.lastMessage || "No messages yet"}
         </p>
       </div>
       {conversation.lastMessageAt && (
-        <span className="flex-shrink-0 text-xs text-gray-400">
-          {formatRelativeTime(conversation.lastMessageAt)}
-        </span>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500">
+            {formatRelativeTime(conversation.lastMessageAt)}
+          </span>
+          {conversation.unreadCount > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
+              {conversation.unreadCount}
+            </span>
+          )}
+        </div>
       )}
     </button>
   );

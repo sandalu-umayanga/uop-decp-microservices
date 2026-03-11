@@ -7,8 +7,8 @@ export const chatService = {
   getConversation: (id: string) =>
     api.get<ConversationResponse>(`/api/conversations/${id}`),
 
-  createConversation: (participants: number[]) =>
-    api.post<ConversationResponse>("/api/conversations", { participants }),
+  createConversation: (participantIds: number[], participantNames: string[]) =>
+    api.post<ConversationResponse>("/api/conversations", { participantIds, participantNames }),
 
   getMessages: (conversationId: string, page = 0, size = 50) =>
     api.get<Page<MessageResponse>>(

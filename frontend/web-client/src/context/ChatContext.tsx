@@ -22,12 +22,16 @@ interface ChatContextType {
   currentConversation: ConversationResponse | null;
   messages: MessageResponse[];
   connected: boolean;
+  totalUnreadCount: number;
   typingUsers: Map<string, string>;
   loadConversations: () => Promise<void>;
   selectConversation: (conv: ConversationResponse) => Promise<void>;
+  markConversationRead: (conversationId: string) => Promise<void>;
+  clearCurrentConversation: () => void;
   sendMessage: (content: string) => void;
   startConversation: (
     participantIds: number[],
+    participantNames: string[],
   ) => Promise<ConversationResponse>;
 }
 
@@ -45,6 +49,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [typingUsers] = useState<Map<string, string>>(new Map());
   const clientRef = useRef<Client | null>(null);
   const subsRef = useRef<{ unsubscribe: () => void }[]>([]);
+  const currentConversationIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentConversationIdRef.current = currentConversation?.id || null;
+  }, [currentConversation]);
+
+  const totalUnreadCount = conversations.reduce(
+    (acc, conv) => acc + (conv.unreadCount || 0),
+    0,
+  );
 
   // Connect to WebSocket
   useEffect(() => {
@@ -52,7 +66,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     const token = getToken();
     const stompClient = new Client({
-      brokerURL: `ws://localhost:8080/ws/chat?token=${encodeURIComponent(token || "")}`,
+      brokerURL: `ws://localhost:8080/ws/chat/websocket?token=${encodeURIComponent(token || "")}`,
       reconnectDelay: 5000,
       onConnect: () => {
         setConnected(true);
@@ -60,6 +74,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         stompClient.publish({
           destination: "/app/chat/online",
           body: String(user.id),
+          headers: {
+            "X-User-Id": String(user.id),
+            "X-User-Name": user.fullName,
+          },
         });
       },
       onDisconnect: () => setConnected(false),
@@ -74,35 +92,67 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         stompClient.publish({
           destination: "/app/chat/offline",
           body: String(user.id),
+          headers: {
+            "X-User-Id": String(user.id),
+            "X-User-Name": user.fullName,
+          },
         });
       }
       stompClient.deactivate();
     };
   }, [isAuthenticated, user]);
 
-  // Subscribe to current conversation messages
+  // Subscribe to ALL user conversations messages
   useEffect(() => {
     const client = clientRef.current;
-    if (!client || !connected || !currentConversation) return;
+    if (!client || !connected || conversations.length === 0) return;
 
     // Unsubscribe previous
     subsRef.current.forEach((s) => s.unsubscribe());
     subsRef.current = [];
 
-    const msgSub = client.subscribe(
-      `/topic/messages/${currentConversation.id}`,
-      (frame) => {
-        const msg: MessageResponse = JSON.parse(frame.body);
-        setMessages((prev) => [...prev, msg]);
-      },
-    );
-    subsRef.current.push(msgSub);
+    conversations.forEach((conv) => {
+      const msgSub = client.subscribe(
+        `/topic/messages/${conv.id}`,
+        (frame) => {
+          const msg: MessageResponse = JSON.parse(frame.body);
+
+          // If this message belongs to the currently active conversation
+          if (currentConversationIdRef.current === conv.id) {
+            setMessages((prev) => [...prev, msg]);
+            // If we are actively looking at it, it should technically be marked as read here too
+            // Either by calling chatService.markRead or the user scrolling.
+          } else {
+            // Update unread count for other conversations
+            setConversations((prev) =>
+              prev
+                .map((c) =>
+                  c.id === conv.id
+                    ? {
+                      ...c,
+                      lastMessage: msg.content,
+                      lastMessageAt: msg.createdAt,
+                      unreadCount: (c.unreadCount || 0) + 1,
+                    }
+                    : c,
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(b.lastMessageAt || b.createdAt).getTime() -
+                    new Date(a.lastMessageAt || a.createdAt).getTime(),
+                ),
+            );
+          }
+        },
+      );
+      subsRef.current.push(msgSub);
+    });
 
     return () => {
       subsRef.current.forEach((s) => s.unsubscribe());
       subsRef.current = [];
     };
-  }, [connected, currentConversation]);
+  }, [connected, conversations.length]);
 
   const loadConversations = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -110,30 +160,51 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setConversations(res.data);
   }, [isAuthenticated]);
 
+  const markConversationRead = useCallback(async (conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c)),
+    );
+    try {
+      await chatService.markRead(conversationId);
+    } catch (err) {
+      console.error("Failed to mark read", err);
+    }
+  }, []);
+
+  const clearCurrentConversation = useCallback(() => {
+    setCurrentConversation(null);
+  }, []);
+
   const selectConversation = useCallback(async (conv: ConversationResponse) => {
     setCurrentConversation(conv);
     const res = await chatService.getMessages(conv.id);
     setMessages(res.data.content?.reverse() || []);
-    await chatService.markRead(conv.id);
-  }, []);
+
+    // Clear unread indicator locally
+    await markConversationRead(conv.id);
+  }, [markConversationRead]);
 
   const sendMessage = useCallback(
     (content: string) => {
       const client = clientRef.current;
-      if (!client || !connected || !currentConversation) return;
+      if (!client || !connected || !currentConversation || !user) return;
       client.publish({
         destination: "/app/chat/send",
+        headers: {
+          "X-User-Id": String(user.id),
+          "X-User-Name": user.fullName,
+        },
         body: JSON.stringify({
           conversationId: currentConversation.id,
           content,
         }),
       });
     },
-    [connected, currentConversation],
+    [connected, currentConversation, user],
   );
 
-  const startConversation = useCallback(async (participantIds: number[]) => {
-    const res = await chatService.createConversation(participantIds);
+  const startConversation = useCallback(async (participantIds: number[], participantNames: string[]) => {
+    const res = await chatService.createConversation(participantIds, participantNames);
     setConversations((prev) => [res.data, ...prev]);
     return res.data;
   }, []);
@@ -145,9 +216,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         currentConversation,
         messages,
         connected,
+        totalUnreadCount,
         typingUsers,
         loadConversations,
         selectConversation,
+        clearCurrentConversation,
+        markConversationRead,
         sendMessage,
         startConversation,
       }}

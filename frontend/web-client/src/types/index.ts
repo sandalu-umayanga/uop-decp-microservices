@@ -192,6 +192,7 @@ export interface ConversationResponse {
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
+  unreadCount: number;
 }
 
 export interface MessageResponse {

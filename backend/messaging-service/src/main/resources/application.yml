@@ -6,7 +6,7 @@ spring:
     name: messaging-service
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:mongodb://admin:admin1234@localhost:27018/decp_messaging?authSource=admin}
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://root:rootpassword@localhost:27018/decp_messaging?authSource=admin}
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
