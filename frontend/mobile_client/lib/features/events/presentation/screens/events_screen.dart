@@ -39,16 +39,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen>
     final canCreate = user?.role == 'ALUMNI' || user?.role == 'ADMIN';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Events'),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [Tab(text: 'All Events'), Tab(text: 'Upcoming')],
-        ),
-      ),
       floatingActionButton: canCreate
           ? FloatingActionButton(
               onPressed: () => context.push('/events/create'),
@@ -69,11 +59,21 @@ class _EventsScreenState extends ConsumerState<EventsScreen>
           } catch (_) { return true; }
         }).toList();
 
-        return TabBarView(
-          controller: _tabController,
+        return Column(
           children: [
-            _EventList(events: state.events),
-            _EventList(events: upcoming),
+            TabBar(
+              controller: _tabController,
+              tabs: const [Tab(text: 'All Events'), Tab(text: 'Upcoming')],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _EventList(events: state.events),
+                  _EventList(events: upcoming),
+                ],
+              ),
+            ),
           ],
         );
       }),

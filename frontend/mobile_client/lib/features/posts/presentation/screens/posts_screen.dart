@@ -87,7 +87,6 @@ class _PostsScreenState extends ConsumerState<PostsScreen> {
     final state = ref.watch(postsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Feed')),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreatePost,
         child: const Icon(Icons.add),

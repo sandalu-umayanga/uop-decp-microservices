@@ -40,7 +40,6 @@ class _ResearchScreenState extends ConsumerState<ResearchScreen> {
     final canCreate = user?.role == 'ALUMNI' || user?.role == 'ADMIN';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Research')),
       floatingActionButton: canCreate
           ? FloatingActionButton(
               onPressed: () => context.push('/research/create'),

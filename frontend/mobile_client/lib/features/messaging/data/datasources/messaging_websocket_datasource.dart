@@ -22,11 +22,11 @@ class MessagingWebSocketDatasource {
 
     _client = StompClient(
       config: StompConfig(
-        url: ApiConstants.wsUrl,
+        url: '${ApiConstants.wsUrl}?token=$token',
         onConnect: (frame) => _onConnect(frame, conversationId),
         onDisconnect: (_) {},
         onWebSocketError: (_) {},
-        stompConnectHeaders: token != null ? {'Authorization': 'Bearer $token'} : {},
+        stompConnectHeaders: {},
         webSocketConnectHeaders: token != null ? {'Authorization': 'Bearer $token'} : {},
       ),
     );

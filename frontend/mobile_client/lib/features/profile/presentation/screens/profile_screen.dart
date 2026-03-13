@@ -78,26 +78,14 @@ class ProfileScreen extends ConsumerWidget {
               margin: EdgeInsets.zero,
               child: Column(
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.bookmark_outline, color: Color(0xFF1565C0)),
-                    title: const Text('Saved Posts'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1),
+
                   ListTile(
                     leading: const Icon(Icons.work_outline, color: Color(0xFF00897B)),
                     title: const Text('My Job Applications'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {},
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.settings_outlined, color: Color(0xFF546E7A)),
-                    title: const Text('Account Settings'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
-                  ),
+
                   if (user.role == 'ADMIN') ...[
                     const Divider(height: 1),
                     ListTile(

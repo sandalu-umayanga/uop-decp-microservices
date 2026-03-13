@@ -101,21 +101,21 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // Branch 3 - Notifications (Alerts)
+          // Branch 3 - Research
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/notifications',
-                builder: (context, state) => const NotificationsScreen(),
+                path: '/research',
+                builder: (context, state) => const ResearchScreen(),
               ),
             ],
           ),
-          // Branch 4 - More (Grid Menu)
+          // Branch 4 - Mentorship
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/more',
-                builder: (context, state) => const MoreMenuScreen(),
+                path: '/mentorship',
+                builder: (context, state) => const MentorshipScreen(),
               ),
             ],
           ),
@@ -147,6 +147,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => EventDetailScreen(eventId: int.parse(state.pathParameters['id']!)),
       ),
 
+      // Notifications
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+
       // Profile
       GoRoute(
         path: '/profile',
@@ -163,11 +169,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ChatScreen(conversationId: state.pathParameters['id']!),
       ),
 
-      // Research
-      GoRoute(
-        path: '/research',
-        builder: (context, state) => const ResearchScreen(),
-      ),
+      // Research detail
       GoRoute(
         path: '/research/create',
         builder: (context, state) => const Scaffold(body: Center(child: Text('Create Research Stub'))), // Stub for brevity
@@ -175,12 +177,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/research/:id',
         builder: (context, state) => ResearchDetailScreen(researchId: int.parse(state.pathParameters['id']!)),
-      ),
-
-      // Mentorship
-      GoRoute(
-        path: '/mentorship',
-        builder: (context, state) => const MentorshipScreen(),
       ),
 
       // Admin

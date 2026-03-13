@@ -16,6 +16,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _ctrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   bool _typing = false;
+  int _prevMessageCount = 0;
 
   @override
   void dispose() {
@@ -24,14 +25,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
+      if (!_scrollCtrl.hasClients) return;
+      if (animate) {
         _scrollCtrl.animateTo(
           _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
+      } else {
+        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
       }
     });
   }
@@ -43,7 +47,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _ctrl.clear();
     _scrollToBottom();
     if (_typing) {
-      ref.read(chatProvider(widget.conversationId).notifier).sendTyping(false);
+      ref
+          .read(chatProvider(widget.conversationId).notifier)
+          .sendTyping(false);
       setState(() => _typing = false);
     }
   }
@@ -52,7 +58,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final now = value.isNotEmpty;
     if (now != _typing) {
       setState(() => _typing = now);
-      ref.read(chatProvider(widget.conversationId).notifier).sendTyping(now);
+      ref
+          .read(chatProvider(widget.conversationId).notifier)
+          .sendTyping(now);
     }
   }
 
@@ -61,13 +69,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final state = ref.watch(chatProvider(widget.conversationId));
     final currentUser = ref.watch(currentUserProvider);
 
-    // Auto-scroll when new messages arrive
-    if (state.messages.isNotEmpty) _scrollToBottom();
+    // Scroll to bottom only when new messages arrive (not on every build)
+    if (state.messages.length != _prevMessageCount) {
+      _prevMessageCount = state.messages.length;
+      _scrollToBottom(animate: _prevMessageCount > 1);
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
         actions: [
+          // Connection status dot
           Container(
             margin: const EdgeInsets.only(right: 16),
             width: 8,
@@ -81,37 +93,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: Column(
         children: [
-          if (state.isLoading)
-            const LinearProgressIndicator(),
+          if (state.isLoading) const LinearProgressIndicator(),
 
-          // Messages
+          // Messages list
           Expanded(
             child: state.messages.isEmpty && !state.isLoading
                 ? const Center(child: Text('No messages yet. Say hello!'))
                 : ListView.builder(
                     controller: _scrollCtrl,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     itemCount: state.messages.length,
                     itemBuilder: (_, i) {
                       final msg = state.messages[i];
                       final isMe = msg.senderId == currentUser?.id;
-                      return _MessageBubble(
-                          message: msg, isMe: isMe);
+                      return _MessageBubble(message: msg, isMe: isMe);
                     },
                   ),
           ),
 
           // Typing indicator
-          if (state.someoneTyping) ...[
+          if (state.someoneTyping)
             Padding(
               padding: const EdgeInsets.only(left: 16, bottom: 4),
               child: Row(children: [
                 Text('${state.typingUser ?? 'Someone'} is typing...',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9E9E9E),
                         fontStyle: FontStyle.italic)),
               ]),
             ),
-          ],
 
           // Input bar
           Container(
@@ -131,6 +143,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _ctrl,
+                    autofocus: true,
+                    keyboardType: TextInputType.text,
                     onChanged: _onTextChanged,
                     onSubmitted: (_) => _send(),
                     textInputAction: TextInputAction.send,
@@ -154,7 +168,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.send_rounded,
+                        color: Colors.white, size: 20),
                     onPressed: _send,
                   ),
                 ),
@@ -184,11 +199,13 @@ class _MessageBubble extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 2),
               child: Text(message.senderName,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+                  style: const TextStyle(
+                      fontSize: 11, color: Color(0xFF9E9E9E))),
             ),
           Container(
             margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.72),
             decoration: BoxDecoration(

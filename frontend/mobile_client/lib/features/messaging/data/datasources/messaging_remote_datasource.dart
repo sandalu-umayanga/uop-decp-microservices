@@ -4,6 +4,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../models/messaging_models.dart';
+import '../../../auth/data/models/user_model.dart';
 
 abstract class MessagingRemoteDatasource {
   Future<List<ConversationModel>> getConversations();
@@ -12,6 +13,7 @@ abstract class MessagingRemoteDatasource {
   Future<List<MessageModel>> getMessages(String conversationId, {int page = 0, int size = 20});
   Future<void> markRead(String conversationId);
   Future<void> deleteConversation(String conversationId);
+  Future<UserModel?> searchUser(String username);
 }
 
 class MessagingRemoteDatasourceImpl implements MessagingRemoteDatasource {
@@ -68,6 +70,21 @@ class MessagingRemoteDatasourceImpl implements MessagingRemoteDatasource {
     try {
       await _dio.delete('${ApiConstants.conversations}/$conversationId');
     } on DioException catch (e) { _handleError(e); }
+  }
+
+  @override
+  Future<UserModel?> searchUser(String username) async {
+    try {
+      final resp = await _dio.get(
+        ApiConstants.userSearch,
+        queryParameters: {'username': username},
+      );
+      if (resp.data == null) return null;
+      return UserModel.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      _handleError(e);
+    }
   }
 
   Never _handleError(DioException e) {

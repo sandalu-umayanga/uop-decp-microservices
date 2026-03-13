@@ -40,6 +40,9 @@ class ChatState {
   }
 }
 
+/// In Riverpod 3.x (without code-gen), a family Notifier passes its arg
+/// through the constructor.  The provider is created with a factory lambda
+/// `(arg) => ChatNotifier(arg)` rather than a bare tear-off.
 class ChatNotifier extends Notifier<ChatState> {
   final String conversationId;
   late final MessagingWebSocketDatasource _ws;
@@ -49,28 +52,32 @@ class ChatNotifier extends Notifier<ChatState> {
   @override
   ChatState build() {
     _init();
-    return const ChatState();
+    return const ChatState(isLoading: true);
   }
 
   Future<void> _init() async {
-    state = state.copyWith(isLoading: true);
     try {
-      // Load history
+      // Fetch message history via REST (newest-first page 0)
       final messages = await ref
           .read(messagingDatasourceProvider)
           .getMessages(conversationId);
+      // Reverse so oldest is at the top of the list view (oldest→newest)
       state = state.copyWith(
-          messages: messages.reversed.toList(), isLoading: false);
+          messages: messages, isLoading: false);
     } catch (_) {
       state = state.copyWith(isLoading: false);
     }
 
-    // Connect WebSocket
+    // Connect WebSocket for real-time updates
     final user = ref.read(currentUserProvider);
     _ws = MessagingWebSocketDatasource(
       storage: ref.read(secureStorageProvider),
       onMessage: (msg) {
-        state = state.copyWith(messages: [...state.messages, msg]);
+        // Avoid duplicate if we already added an optimistic message
+        final alreadyExists = state.messages.any((m) => m.id == msg.id);
+        if (!alreadyExists) {
+          state = state.copyWith(messages: [...state.messages, msg]);
+        }
       },
       onTyping: (data) {
         final isTyping = data['typing'] as bool? ?? false;
@@ -100,13 +107,13 @@ class ChatNotifier extends Notifier<ChatState> {
         conversationId: conversationId,
         content: content,
         userId: user.id,
-        userName: user.username);
-    // Optimistic: add immediately
+        userName: user.fullName);
+    // Optimistic: show immediately with a temp id
     final optimistic = MessageModel(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       conversationId: conversationId,
       senderId: user.id,
-      senderName: user.username,
+      senderName: user.fullName,
       content: content,
       readBy: [user.id],
       createdAt: DateTime.now().toIso8601String(),
@@ -120,10 +127,12 @@ class ChatNotifier extends Notifier<ChatState> {
     _ws.sendTyping(
         conversationId: conversationId,
         userId: user.id,
-        userName: user.username,
+        userName: user.fullName,
         typing: typing);
   }
 }
 
+/// Use a factory lambda so Riverpod passes the family arg to the constructor.
 final chatProvider =
-    NotifierProvider.family<ChatNotifier, ChatState, String>(ChatNotifier.new);
+    NotifierProvider.family<ChatNotifier, ChatState, String>(
+        (arg) => ChatNotifier(arg));

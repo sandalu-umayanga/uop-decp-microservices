@@ -1,7 +1,7 @@
 class ApiConstants {
   // Base URL - use 10.0.2.2 for Android emulator to reach host machine
   static const String baseUrl = 'http://10.0.2.2:8080/api';
-  static const String wsUrl = 'ws://10.0.2.2:8080/ws/chat';
+  static const String wsUrl = 'ws://10.0.2.2:8080/ws/chat/websocket';
 
   // Auth
   static const String login = '/auth/login';

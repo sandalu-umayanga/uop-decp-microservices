@@ -22,7 +22,7 @@ class SecureStorageService {
     await _storage.delete(key: _tokenKey);
   }
 
-  // Generic key/value methods for other data (e.g., cached user info)
+  // Generic key/value methods for other data
   Future<void> saveData(String key, String value) async {
     await _storage.write(key: key, value: value);
   }

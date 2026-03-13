@@ -29,7 +29,6 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     final canCreate = user?.role == 'ALUMNI' || user?.role == 'ADMIN';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Jobs')),
       floatingActionButton: canCreate
           ? FloatingActionButton(
               onPressed: () => context.push('/jobs/create'),

@@ -110,6 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Username field
                   TextFormField(
                     controller: _usernameCtrl,
+                    autofocus: true,
                     keyboardType: TextInputType.text,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
