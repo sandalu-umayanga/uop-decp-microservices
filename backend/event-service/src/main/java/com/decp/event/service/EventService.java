@@ -12,6 +12,7 @@ import com.decp.event.repository.EventRepository;
 import com.decp.event.repository.RsvpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +25,7 @@ public class EventService {
     private final RsvpRepository rsvpRepository;
     private final EventPublisher eventPublisher;
 
+    @Transactional
     public EventResponse createEvent(EventRequest request, Long userId, String userName) {
         Event event = Event.builder()
                 .title(request.getTitle())
@@ -58,6 +60,7 @@ public class EventService {
         return toEventResponse(event);
     }
 
+    @Transactional
     public EventResponse updateEvent(Long id, EventRequest request, String userName) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
@@ -79,6 +82,7 @@ public class EventService {
         return toEventResponse(updated);
     }
 
+    @Transactional
     public void deleteEvent(Long id, String userName, String userRole) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
@@ -90,6 +94,7 @@ public class EventService {
         eventRepository.delete(event);
     }
 
+    @Transactional
     public RsvpResponse rsvpToEvent(Long eventId, RsvpRequest request, Long userId, String userName) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found with id: " + eventId));

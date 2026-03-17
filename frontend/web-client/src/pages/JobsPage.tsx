@@ -152,8 +152,8 @@ export default function JobsPage() {
       setSelectedJob(null);
       loadJobs();
     } catch (err: any) {
-      const errorMsg = 
-        err.response?.data?.message || 
+      const errorMsg =
+        err.response?.data?.message ||
         err.response?.data?.error ||
         err.message ||
         "Failed to delete job";

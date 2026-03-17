@@ -23,6 +23,9 @@ api.interceptors.request.use((config) => {
       if (user.role) {
         config.headers["X-User-Role"] = user.role;
       }
+      if (user.fullName) {
+        config.headers["X-User-Name"] = user.fullName;
+      }
     } catch (e) {
       console.error("Failed to parse stored user:", e);
     }

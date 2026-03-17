@@ -1,9 +1,10 @@
 package com.decp.event.model;
 
 public enum EventCategory {
-    WORKSHOP,
-    SEMINAR,
+    ACADEMIC,
     SOCIAL,
-    CAREER_FAIR,
-    OTHER
+    WORKSHOP,
+    NETWORKING,
+    CAREER,
+    ALUMNI
 }
