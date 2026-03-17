@@ -1,13 +1,25 @@
 package com.decp.job.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.decp.job.model.Application;
 import com.decp.job.model.Job;
 import com.decp.job.service.JobService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -19,10 +31,12 @@ public class JobController {
     @PostMapping
     public ResponseEntity<Job> createJob(
             @RequestHeader("X-User-Role") String role,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestBody Job job) {
         if (!"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
             return ResponseEntity.status(403).build();
         }
+        job.setPostedBy(userId);
         return ResponseEntity.ok(jobService.createJob(job));
     }
 
@@ -85,6 +99,22 @@ public class JobController {
                 jobService.closeJob(id, userId) : 
                 jobService.openJob(id, userId);
             return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteJob(
+            @RequestHeader("X-User-Role") String role,
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long id) {
+        if (!"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
+            return ResponseEntity.status(403).body(new ErrorResponse("Only ALUMNI and ADMIN can delete jobs"));
+        }
+        try {
+            jobService.deleteJob(id, userId);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(403).body(new ErrorResponse(e.getMessage()));
         }

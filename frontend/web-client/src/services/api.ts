@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken, clearAuth } from "../utils/localStorage";
+import { getToken, clearAuth, getStoredUser } from "../utils/localStorage";
 
 const api = axios.create({
   baseURL: "http://localhost:8080",
@@ -10,6 +10,22 @@ api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Add user headers from stored user
+  const storedUser = getStoredUser();
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      if (user.id !== undefined && user.id !== null) {
+        config.headers["X-User-Id"] = String(user.id);
+      }
+      if (user.role) {
+        config.headers["X-User-Role"] = user.role;
+      }
+    } catch (e) {
+      console.error("Failed to parse stored user:", e);
+    }
   }
   return config;
 });

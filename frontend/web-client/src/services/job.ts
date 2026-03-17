@@ -22,4 +22,6 @@ export const jobService = {
 
   toggleStatus: (jobId: number, action: "open" | "close") =>
     api.patch<Job>(`/api/jobs/${jobId}/status`, {}, { params: { action } }),
+
+  delete: (jobId: number) => api.delete(`/api/jobs/${jobId}`),
 };

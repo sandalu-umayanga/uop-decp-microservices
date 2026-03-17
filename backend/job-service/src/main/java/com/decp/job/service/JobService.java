@@ -1,13 +1,16 @@
 package com.decp.job.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.decp.job.model.Application;
 import com.decp.job.model.Job;
 import com.decp.job.repository.ApplicationRepository;
 import com.decp.job.repository.JobRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class JobService {
         return jobRepository.findById(id).orElseThrow(() -> new RuntimeException("Job not found"));
     }
 
+    @Transactional
     public Application applyForJob(Application application) {
         Application saved = applicationRepository.save(application);
         
@@ -90,5 +94,21 @@ public class JobService {
 
     public List<Application> getApplicationsByUserId(Long userId) {
         return applicationRepository.findAllByUserId(userId);
+    }
+
+    @Transactional
+    public void deleteJob(Long id, Long userId) {
+        Job job = getJobById(id);
+        
+        // Only the poster can delete
+        if (!job.getPostedBy().equals(userId)) {
+            throw new RuntimeException("Only the job poster can delete this job");
+        }
+        
+        // Delete all applications for this job
+        applicationRepository.deleteByJobId(id);
+        
+        // Delete the job
+        jobRepository.deleteById(id);
     }
 }

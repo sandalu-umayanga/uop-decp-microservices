@@ -22,6 +22,7 @@ export default function JobsPage() {
   const [showApplications, setShowApplications] = useState(false);
   const [applications, setApplications] = useState<any[]>([]);
   const [loadingApps, setLoadingApps] = useState(false);
+  const [userAppliedJobIds, setUserAppliedJobIds] = useState<number[]>([]);
 
   // Create job fields
   const [newTitle, setNewTitle] = useState("");
@@ -33,7 +34,10 @@ export default function JobsPage() {
 
   useEffect(() => {
     loadJobs();
-  }, []);
+    if (user?.id) {
+      loadUserApplications();
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     let result = jobs;
@@ -61,6 +65,17 @@ export default function JobsPage() {
       setError("Failed to load jobs");
     }
     setLoading(false);
+  };
+
+  const loadUserApplications = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await jobService.getUserApplications(String(user.id));
+      const appliedJobIds = res.data.map((app: any) => app.jobId);
+      setUserAppliedJobIds(appliedJobIds);
+    } catch (err: any) {
+      console.error("Failed to load user applications:", err);
+    }
   };
 
   const handleApply = (job: Job) => {
@@ -101,13 +116,17 @@ export default function JobsPage() {
     setCreating(false);
   };
 
-  const handleToggleStatus = async (jobId: number, action: "close" | "open") => {
+  const handleToggleStatus = async (
+    jobId: number,
+    action: "close" | "open",
+  ) => {
     try {
       const updated = await jobService.toggleStatus(jobId, action);
       setJobs(jobs.map((j) => (j.id === jobId ? updated.data : j)));
       setSelectedJob(updated.data);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || "Failed to update job status";
+      const errorMsg =
+        err.response?.data?.message || "Failed to update job status";
       setError(errorMsg);
       console.error("Job status update error:", err);
     }
@@ -124,6 +143,28 @@ export default function JobsPage() {
       setError("Failed to load applications");
     }
     setLoadingApps(false);
+  };
+
+  const handleDeleteJob = async (jobId: number) => {
+    try {
+      await jobService.delete(jobId);
+      setJobs(jobs.filter((j) => j.id !== jobId));
+      setSelectedJob(null);
+      loadJobs();
+    } catch (err: any) {
+      const errorMsg = 
+        err.response?.data?.message || 
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to delete job";
+      setError(errorMsg);
+      console.error("Job deletion error:", {
+        status: err.response?.status,
+        message: errorMsg,
+        data: err.response?.data,
+        headers: err.config?.headers,
+      });
+    }
   };
 
   const handleCreateJob = async (e: React.FormEvent) => {
@@ -268,10 +309,28 @@ export default function JobsPage() {
               key={job.id}
               job={job}
               currentUserId={user?.id}
+              hasApplied={userAppliedJobIds.includes(job.id)}
               onApply={user?.role === "STUDENT" ? handleApply : undefined}
-              onEdit={user?.role === "ALUMNI" || user?.role === "ADMIN" ? handleEdit : undefined}
-              onToggleStatus={user?.role === "ALUMNI" || user?.role === "ADMIN" ? handleToggleStatus : undefined}
-              onViewApplications={user?.role === "ALUMNI" || user?.role === "ADMIN" ? handleViewApplications : undefined}
+              onEdit={
+                user?.role === "ALUMNI" || user?.role === "ADMIN"
+                  ? handleEdit
+                  : undefined
+              }
+              onToggleStatus={
+                user?.role === "ALUMNI" || user?.role === "ADMIN"
+                  ? handleToggleStatus
+                  : undefined
+              }
+              onViewApplications={
+                user?.role === "ALUMNI" || user?.role === "ADMIN"
+                  ? handleViewApplications
+                  : undefined
+              }
+              onDelete={
+                user?.role === "ALUMNI" || user?.role === "ADMIN"
+                  ? handleDeleteJob
+                  : undefined
+              }
             />
           ))
         )}
@@ -281,7 +340,11 @@ export default function JobsPage() {
         open={showApplyModal}
         job={selectedJob}
         onClose={() => setShowApplyModal(false)}
-        onApplied={() => {}}
+        onApplied={() => {
+          if (selectedJob) {
+            setUserAppliedJobIds([...userAppliedJobIds, selectedJob.id]);
+          }
+        }}
       />
 
       {/* Edit Job Modal */}

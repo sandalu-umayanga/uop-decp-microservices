@@ -5,21 +5,26 @@ import { formatDate } from "../../utils/formatDate";
 interface JobCardProps {
   job: Job;
   currentUserId?: number;
+  hasApplied?: boolean;
   onApply?: (job: Job) => void;
   onEdit?: (job: Job) => void;
   onToggleStatus?: (jobId: number, action: "close" | "open") => void;
   onViewApplications?: (job: Job) => void;
+  onDelete?: (jobId: number) => Promise<void>;
 }
 
 export default function JobCard({
   job,
   currentUserId,
+  hasApplied,
   onApply,
   onEdit,
   onToggleStatus,
   onViewApplications,
+  onDelete,
 }: JobCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isOwner = String(currentUserId) === String(job.postedBy);
   const isClosed = job.status === "CLOSED";
 
@@ -102,10 +107,26 @@ export default function JobCard({
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {job.applicationCount ?? 0} application
-            {(job.applicationCount ?? 0) !== 1 ? "s" : ""}
+            Posted by you
           </span>
         )}
+        <span className="flex items-center gap-1 font-medium text-blue-600">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20a9 9 0 0118 0v2h2v-2a11 11 0 10-20 0v2h2v-2z"
+            />
+          </svg>
+          {job.applicationCount ?? 0} application
+          {(job.applicationCount ?? 0) !== 1 ? "s" : ""}
+        </span>
       </div>
       <p className="mt-3 line-clamp-2 text-sm text-gray-600">
         {job.description}
@@ -140,11 +161,11 @@ export default function JobCard({
                 <button
                   onClick={async () => {
                     setIsLoading(true);
-                    await onToggleStatus(
-                      job.id,
-                      isClosed ? "open" : "close"
-                    );
-                    setIsLoading(false);
+                    try {
+                      await onToggleStatus(job.id, isClosed ? "open" : "close");
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
                   disabled={isLoading}
                   className={`rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50 ${
@@ -156,20 +177,74 @@ export default function JobCard({
                   {isClosed ? "Reopen" : "Close"}
                 </button>
               )}
+              {onDelete && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isLoading}
+                  className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              )}
             </>
           )}
-          {!isOwner && onApply && (
-            <button
-              onClick={() => onApply(job)}
-              disabled={isLoading || isClosed}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-              title={isClosed ? "This job posting is closed" : ""}
-            >
-              Apply
-            </button>
-          )}
+          {!isOwner &&
+            onApply &&
+            (hasApplied ? (
+              <span className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-600">
+                ✓ Already Applied
+              </span>
+            ) : (
+              <button
+                onClick={() => onApply(job)}
+                disabled={isLoading || isClosed}
+                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                title={isClosed ? "This job posting is closed" : ""}
+              >
+                Apply
+              </button>
+            ))}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Delete Job Post?
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">
+              This action cannot be undone. All applications for this job will
+              also be deleted.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isLoading}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await onDelete?.(job.id);
+                    setShowDeleteConfirm(false);
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                disabled={isLoading}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {isLoading ? "Deleting..." : "Delete Job"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
