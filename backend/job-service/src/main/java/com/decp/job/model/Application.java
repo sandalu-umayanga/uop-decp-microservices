@@ -25,7 +25,7 @@ public class Application {
     private String applicantName;
     
     @Column(columnDefinition = "TEXT")
-    private String coverLetter;
+    private String whyInterested; // Why are you interested in this position?
     
     private String resumeUrl;
     

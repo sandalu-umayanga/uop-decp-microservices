@@ -39,18 +39,66 @@ public class JobController {
     @PostMapping("/{id}/apply")
     public ResponseEntity<Application> applyForJob(
             @RequestHeader("X-User-Role") String role,
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id, 
             @RequestBody Application application) {
         if (!"STUDENT".equals(role)) {
             return ResponseEntity.status(403).build();
         }
         application.setJobId(id);
+        application.setUserId(userId);
         return ResponseEntity.ok(jobService.applyForJob(application));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Job> updateJob(
+            @RequestHeader("X-User-Role") String role,
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long id,
+            @RequestBody Job jobUpdates) {
+        if (!"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
+            return ResponseEntity.status(403).build();
+        }
+        try {
+            Job updated = jobService.updateJob(id, jobUpdates, userId);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).build();
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Job> toggleJobStatus(
+            @RequestHeader("X-User-Role") String role,
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long id,
+            @RequestParam String action) {
+        if (!"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
+            return ResponseEntity.status(403).build();
+        }
+        try {
+            Job updated = "close".equalsIgnoreCase(action) ? 
+                jobService.closeJob(id, userId) : 
+                jobService.openJob(id, userId);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).build();
+        }
+    }
+
     @GetMapping("/{id}/applications")
-    public ResponseEntity<List<Application>> getApplicationsByJob(@PathVariable Long id) {
-        return ResponseEntity.ok(jobService.getApplicationsByJobId(id));
+    public ResponseEntity<?> getApplicationsByJob(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long id) {
+        try {
+            Job job = jobService.getJobById(id);
+            if (!job.getPostedBy().equals(userId)) {
+                return ResponseEntity.status(403).build();
+            }
+            return ResponseEntity.ok(jobService.getApplicationsByJobId(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).build();
+        }
     }
 
     @GetMapping("/user/{userId}/applications")

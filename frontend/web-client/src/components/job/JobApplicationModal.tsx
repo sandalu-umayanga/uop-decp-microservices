@@ -17,7 +17,7 @@ export default function JobApplicationModal({
   onApplied,
 }: JobApplicationModalProps) {
   const { user } = useAuth();
-  const [coverLetter, setCoverLetter] = useState("");
+  const [whyInterested, setWhyInterested] = useState("");
   const [resumeUrl, setResumeUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -26,17 +26,17 @@ export default function JobApplicationModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coverLetter.trim()) return;
+    if (!whyInterested.trim()) return;
     setSubmitting(true);
     setError("");
     try {
       await jobService.apply(job.id, {
         userId: String(user.id),
         applicantName: user.fullName,
-        coverLetter: coverLetter.trim(),
+        whyInterested: whyInterested.trim(),
         resumeUrl: resumeUrl.trim() || undefined,
       });
-      setCoverLetter("");
+      setWhyInterested("");
       setResumeUrl("");
       onApplied();
       onClose();
@@ -64,11 +64,11 @@ export default function JobApplicationModal({
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Cover Letter *
+              Why are you interested in this position? *
             </label>
             <textarea
-              value={coverLetter}
-              onChange={(e) => setCoverLetter(e.target.value)}
+              value={whyInterested}
+              onChange={(e) => setWhyInterested(e.target.value)}
               rows={5}
               className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               placeholder="Tell us why you're a great fit..."
@@ -96,7 +96,7 @@ export default function JobApplicationModal({
             </button>
             <button
               type="submit"
-              disabled={!coverLetter.trim() || submitting}
+              disabled={!whyInterested.trim() || submitting}
               className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
             >
               {submitting ? "Submitting..." : "Submit Application"}

@@ -66,6 +66,8 @@ export interface Job {
   type: string;
   postedBy: string;
   posterName: string;
+  status?: "OPEN" | "CLOSED";
+  applicationCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,7 +77,7 @@ export interface JobApplication {
   jobId: number;
   userId: string;
   applicantName: string;
-  coverLetter: string;
+  whyInterested: string;
   resumeUrl?: string;
   status: "PENDING" | "REVIEWED" | "ACCEPTED" | "REJECTED";
   appliedAt: string;

@@ -32,6 +32,9 @@ public class Job {
     
     private Long postedBy; // User ID of the alumni/admin who posted
     private String posterName;
+    
+    private String status; // OPEN or CLOSED
+    private Integer applicationCount; // Number of applications
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -40,6 +43,12 @@ public class Job {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (status == null) {
+            status = "OPEN";
+        }
+        if (applicationCount == null) {
+            applicationCount = 0;
+        }
     }
 
     @PreUpdate

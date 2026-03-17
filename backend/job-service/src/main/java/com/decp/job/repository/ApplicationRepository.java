@@ -10,4 +10,5 @@ import java.util.List;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     List<Application> findAllByJobId(Long jobId);
     List<Application> findAllByUserId(Long userId);
+    long countByJobId(Long jobId);
 }

@@ -16,4 +16,10 @@ export const jobService = {
 
   getUserApplications: (userId: string) =>
     api.get<JobApplication[]>(`/api/jobs/user/${userId}/applications`),
+
+  update: (jobId: number, data: Partial<Job>) =>
+    api.put<Job>(`/api/jobs/${jobId}`, data),
+
+  toggleStatus: (jobId: number, action: "open" | "close") =>
+    api.patch<Job>(`/api/jobs/${jobId}/status`, {}, { params: { action } }),
 };

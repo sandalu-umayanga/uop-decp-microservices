@@ -29,7 +29,59 @@ public class JobService {
     }
 
     public Application applyForJob(Application application) {
-        return applicationRepository.save(application);
+        Application saved = applicationRepository.save(application);
+        
+        // Increment application count for the job
+        Job job = getJobById(application.getJobId());
+        job.setApplicationCount((job.getApplicationCount() != null ? job.getApplicationCount() : 0) + 1);
+        jobRepository.save(job);
+        
+        return saved;
+    }
+
+    public Job updateJob(Long id, Job jobUpdates, Long userId) {
+        Job job = getJobById(id);
+        
+        // Only the poster can update
+        if (!job.getPostedBy().equals(userId)) {
+            throw new RuntimeException("Only the job poster can update this job");
+        }
+        
+        job.setTitle(jobUpdates.getTitle());
+        job.setDescription(jobUpdates.getDescription());
+        job.setCompany(jobUpdates.getCompany());
+        job.setLocation(jobUpdates.getLocation());
+        job.setType(jobUpdates.getType());
+        
+        return jobRepository.save(job);
+    }
+
+    public Job closeJob(Long id, Long userId) {
+        Job job = getJobById(id);
+        
+        // Only the poster can close
+        if (!job.getPostedBy().equals(userId)) {
+            throw new RuntimeException("Only the job poster can close this job");
+        }
+        
+        job.setStatus("CLOSED");
+        return jobRepository.save(job);
+    }
+
+    public Job openJob(Long id, Long userId) {
+        Job job = getJobById(id);
+        
+        // Only the poster can reopen
+        if (!job.getPostedBy().equals(userId)) {
+            throw new RuntimeException("Only the job poster can reopen this job");
+        }
+        
+        job.setStatus("OPEN");
+        return jobRepository.save(job);
+    }
+
+    public int getApplicationCount(Long jobId) {
+        return (int) applicationRepository.countByJobId(jobId);
     }
 
     public List<Application> getApplicationsByJobId(Long jobId) {

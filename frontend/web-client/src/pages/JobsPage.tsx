@@ -18,6 +18,10 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showApplications, setShowApplications] = useState(false);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loadingApps, setLoadingApps] = useState(false);
 
   // Create job fields
   const [newTitle, setNewTitle] = useState("");
@@ -62,6 +66,60 @@ export default function JobsPage() {
   const handleApply = (job: Job) => {
     setSelectedJob(job);
     setShowApplyModal(true);
+  };
+
+  const handleEdit = (job: Job) => {
+    setSelectedJob(job);
+    setNewTitle(job.title);
+    setNewCompany(job.company);
+    setNewLocation(job.location);
+    setNewType(job.type);
+    setNewDescription(job.description);
+    setShowEditForm(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedJob || !newTitle.trim() || !newCompany.trim()) return;
+    setCreating(true);
+    try {
+      await jobService.update(selectedJob.id, {
+        title: newTitle.trim(),
+        company: newCompany.trim(),
+        location: newLocation.trim(),
+        type: newType,
+        description: newDescription.trim(),
+      });
+      setShowEditForm(false);
+      setSelectedJob(null);
+      loadJobs();
+    } catch {
+      setError("Failed to update job");
+    }
+    setCreating(false);
+  };
+
+  const handleToggleStatus = async (jobId: number, action: "close" | "open") => {
+    try {
+      const updated = await jobService.toggleStatus(jobId, action);
+      setJobs(jobs.map((j) => (j.id === jobId ? updated.data : j)));
+      setSelectedJob(updated.data);
+    } catch {
+      setError("Failed to update job status");
+    }
+  };
+
+  const handleViewApplications = async (job: Job) => {
+    setSelectedJob(job);
+    setLoadingApps(true);
+    try {
+      const res = await jobService.getApplications(job.id);
+      setApplications(res.data);
+      setShowApplications(true);
+    } catch {
+      setError("Failed to load applications");
+    }
+    setLoadingApps(false);
   };
 
   const handleCreateJob = async (e: React.FormEvent) => {
@@ -205,7 +263,11 @@ export default function JobsPage() {
             <JobCard
               key={job.id}
               job={job}
+              currentUserId={user?.id}
               onApply={user?.role === "STUDENT" ? handleApply : undefined}
+              onEdit={user?.role === "ALUMNI" || user?.role === "ADMIN" ? handleEdit : undefined}
+              onToggleStatus={user?.role === "ALUMNI" || user?.role === "ADMIN" ? handleToggleStatus : undefined}
+              onViewApplications={user?.role === "ALUMNI" || user?.role === "ADMIN" ? handleViewApplications : undefined}
             />
           ))
         )}
@@ -217,6 +279,142 @@ export default function JobsPage() {
         onClose={() => setShowApplyModal(false)}
         onApplied={() => {}}
       />
+
+      {/* Edit Job Modal */}
+      {showEditForm && selectedJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Edit Job: {selectedJob.title}
+              </h3>
+              <button
+                onClick={() => setShowEditForm(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              onSubmit={handleSaveEdit}
+              className="mt-4 grid gap-4 sm:grid-cols-2"
+            >
+              <input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Job Title *"
+                required
+                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+              <input
+                value={newCompany}
+                onChange={(e) => setNewCompany(e.target.value)}
+                placeholder="Company *"
+                required
+                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+              <input
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+                placeholder="Location"
+                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+              <select
+                value={newType}
+                onChange={(e) => setNewType(e.target.value)}
+                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                <option value="FULL_TIME">Full Time</option>
+                <option value="PART_TIME">Part Time</option>
+                <option value="INTERNSHIP">Internship</option>
+                <option value="CONTRACT">Contract</option>
+              </select>
+              <textarea
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="Description"
+                rows={3}
+                className="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+              <div className="sm:col-span-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditForm(false)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                >
+                  {creating ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Applications Modal */}
+      {showApplications && selectedJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Applications for {selectedJob.title}
+              </h3>
+              <button
+                onClick={() => setShowApplications(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            {loadingApps ? (
+              <div className="py-8 text-center text-gray-500">Loading...</div>
+            ) : applications.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                No applications yet
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {applications.map((app) => (
+                  <div
+                    key={app.id}
+                    className="rounded-lg border border-gray-200 p-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">
+                          {app.applicantName}
+                        </h4>
+                        <p className="mt-1 text-sm text-gray-600">
+                          {app.whyInterested}
+                        </p>
+                        {app.resumeUrl && (
+                          <a
+                            href={app.resumeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-block text-sm text-primary-600 hover:text-primary-700"
+                          >
+                            View Resume →
+                          </a>
+                        )}
+                      </div>
+                      <div className="text-right text-xs text-gray-400">
+                        {new Date(app.appliedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
