@@ -1,0 +1,21 @@
+{
+  "name": "decp-infrastructure",
+  "version": "1.0.0",
+  "bin": {
+    "infrastructure": "bin/app.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.178.1",
+    "typescript": "~5.4.5",
+    "@types/node": "20.14.8"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.178.1",
+    "constructs": "^10.0.0"
+  }
+}
