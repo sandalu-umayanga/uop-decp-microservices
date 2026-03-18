@@ -35,7 +35,7 @@ jobs:
       - name: Build
         working-directory: frontend/web-client
         run: |
-          echo "API URL is set: ${{ secrets.VITE_API_BASE_URL != '' }}"
+          echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
           npm run build
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
