@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import type {
   ConversationResponse,
   MessageResponse,
@@ -66,9 +65,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated || !user) return;
 
     const token = getToken();
-    const wsUrl = `http://localhost:8080/ws/chat?token=${encodeURIComponent(token || "")}`;
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS(wsUrl),
+      brokerURL: `ws://localhost:8080/ws/chat/websocket?token=${encodeURIComponent(token || "")}`,
       reconnectDelay: 5000,
       onConnect: () => {
         setConnected(true);
