@@ -48,19 +48,19 @@ export default function DashboardPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Feed */}
         <div className="lg:col-span-2">
           {/* Create Post */}
-          <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="glass-panel stagger-in mb-6 rounded-2xl p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500/15 text-sm font-semibold text-primary-700 dark:bg-primary-500/30 dark:text-primary-200">
                 {user?.fullName?.charAt(0).toUpperCase()}
               </div>
               <button
                 onClick={() => setShowPostModal(true)}
-                className="flex-1 rounded-lg bg-gray-50 px-4 py-2.5 text-left text-sm text-gray-500 hover:bg-gray-100"
+                className="flex-1 rounded-xl bg-white/70 px-4 py-2.5 text-left text-sm ink-muted outline-none transition hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
               >
                 What's on your mind, {user?.fullName?.split(" ")[0]}?
               </button>
@@ -72,7 +72,7 @@ export default function DashboardPage() {
           {/* Posts */}
           <div className="space-y-4">
             {posts.length === 0 && !loading && (
-              <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
+              <div className="glass-panel stagger-in stagger-in-delay-1 rounded-2xl p-8 text-center ink-muted">
                 <p className="text-lg">No posts yet</p>
                 <p className="text-sm">Be the first to share something!</p>
               </div>
@@ -86,14 +86,16 @@ export default function DashboardPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Profile Card */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="glass-panel stagger-in stagger-in-delay-1 rounded-2xl p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-lg font-bold text-primary-700">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-500/15 text-lg font-bold text-primary-700 dark:bg-primary-500/30 dark:text-primary-200">
                 {user?.fullName?.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold text-gray-900">{user?.fullName}</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {user?.fullName}
+                </p>
+                <p className="text-sm ink-muted">
                   @{user?.username} · {user?.role}
                 </p>
               </div>
@@ -101,24 +103,27 @@ export default function DashboardPage() {
           </div>
 
           {/* Upcoming Events */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-3 font-semibold text-gray-900">
+          <div className="glass-panel stagger-in stagger-in-delay-2 rounded-2xl p-5">
+            <h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">
               Upcoming Events
             </h3>
             {upcomingEvents.length === 0 ? (
-              <p className="text-sm text-gray-500">No upcoming events</p>
+              <p className="text-sm ink-muted">No upcoming events</p>
             ) : (
               <div className="space-y-3">
                 {upcomingEvents.map((event) => (
-                  <div key={event.id} className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-50 text-xs font-medium text-primary-700">
+                  <div
+                    key={event.id}
+                    className="flex items-start gap-3 rounded-xl bg-white/60 p-2.5 dark:bg-white/5"
+                  >
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-500/15 text-xs font-medium text-primary-700 dark:bg-primary-500/30 dark:text-primary-200">
                       {new Date(event.eventDate).getDate()}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-900">
+                      <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
                         {event.title}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs ink-muted">
                         {formatDate(event.eventDate)}
                       </p>
                     </div>

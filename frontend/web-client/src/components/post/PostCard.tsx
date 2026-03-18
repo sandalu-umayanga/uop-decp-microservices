@@ -51,7 +51,7 @@ export default function PostCard({ post, onUpdate }: PostCardProps) {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="glass-panel rounded-2xl p-5">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
@@ -59,17 +59,17 @@ export default function PostCard({ post, onUpdate }: PostCardProps) {
             post.username?.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">
             {post.fullName || post.username}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs ink-muted">
             @{post.username} · {formatRelativeTime(post.createdAt)}
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <p className="mt-3 whitespace-pre-wrap text-gray-800">{post.content}</p>
+      <p className="mt-3 whitespace-pre-wrap text-gray-800 dark:text-gray-100">{post.content}</p>
 
       {/* Media */}
       {post.mediaUrls && post.mediaUrls.length > 0 && (
@@ -86,12 +86,12 @@ export default function PostCard({ post, onUpdate }: PostCardProps) {
       )}
 
       {/* Actions */}
-      <div className="mt-4 flex items-center gap-6 border-t border-gray-100 pt-3">
+      <div className="mt-4 flex items-center gap-6 border-t subtle-border pt-3">
         <button
           onClick={handleLike}
           disabled={liking}
           className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-            isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+            isLiked ? "text-red-500" : "ink-muted hover:text-red-500"
           }`}
         >
           <svg
@@ -111,7 +111,7 @@ export default function PostCard({ post, onUpdate }: PostCardProps) {
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary-600"
+          className="flex items-center gap-1.5 text-sm font-medium ink-muted hover:text-primary-600"
         >
           <svg
             className="h-5 w-5"

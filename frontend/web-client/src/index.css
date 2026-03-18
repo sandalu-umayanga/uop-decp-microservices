@@ -1,7 +1,107 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --bg: #f4f7ef;
+    --bg-elevated: #ffffff;
+    --bg-muted: #e9efe0;
+    --text-main: #1d2730;
+    --text-muted: #62707d;
+    --stroke: rgba(24, 39, 53, 0.14);
+  }
+
+  .dark {
+    --bg: #0f1720;
+    --bg-elevated: #162432;
+    --bg-muted: #1f2f3f;
+    --text-main: #e7eef8;
+    --text-muted: #acc0d4;
+    --stroke: rgba(191, 214, 236, 0.2);
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    background: radial-gradient(
+        1300px 680px at -10% -20%,
+        rgba(71, 146, 255, 0.18),
+        transparent 55%
+      ),
+      radial-gradient(
+        850px 500px at 120% 10%,
+        rgba(71, 255, 184, 0.16),
+        transparent 52%
+      ),
+      var(--bg);
+    color: var(--text-main);
+    @apply antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Source Serif 4", Georgia, serif;
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer utilities {
+  .app-shell {
+    background-color: color-mix(in srgb, var(--bg) 70%, transparent);
+    color: var(--text-main);
+  }
+
+  .glass-panel {
+    background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+    border: 1px solid var(--stroke);
+    box-shadow: 0 22px 40px -28px rgba(24, 39, 53, 0.45);
+    backdrop-filter: blur(14px);
+  }
+
+  .subtle-border {
+    border-color: var(--stroke);
+  }
+
+  .ink-muted {
+    color: var(--text-muted);
+  }
+
+  .stagger-in {
+    animation: rise-in 420ms ease-out both;
+  }
+
+  .stagger-in-delay-1 {
+    animation-delay: 70ms;
+  }
+
+  .stagger-in-delay-2 {
+    animation-delay: 130ms;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply antialiased;
 }

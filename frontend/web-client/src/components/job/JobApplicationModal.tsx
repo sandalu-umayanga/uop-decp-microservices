@@ -47,41 +47,41 @@ export default function JobApplicationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="glass-panel w-full max-w-lg rounded-2xl p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Apply for {job.title}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="ink-muted hover:text-gray-800 dark:hover:text-gray-100"
           >
             ✕
           </button>
         </div>
-        <p className="mt-1 text-sm text-gray-500">{job.company}</p>
+        <p className="mt-1 text-sm ink-muted">{job.company}</p>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
               Why are you interested in this position? *
             </label>
             <textarea
               value={whyInterested}
               onChange={(e) => setWhyInterested(e.target.value)}
               rows={5}
-              className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border subtle-border bg-white/80 p-3 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               placeholder="Tell us why you're a great fit..."
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
               Resume URL
             </label>
             <input
               value={resumeUrl}
               onChange={(e) => setResumeUrl(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border subtle-border bg-white/80 px-3 py-2 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               placeholder="https://drive.google.com/..."
             />
           </div>
@@ -90,7 +90,7 @@ export default function JobApplicationModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>

@@ -49,21 +49,21 @@ export default function EventDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="glass-panel max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">{event.title}</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{event.title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="ink-muted hover:text-gray-800 dark:hover:text-gray-100"
           >
             ✕
           </button>
         </div>
 
         <div className="mt-4 space-y-3">
-          <p className="text-gray-700">{event.description}</p>
-          <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
+          <p className="text-gray-700 dark:text-gray-200">{event.description}</p>
+          <div className="grid grid-cols-2 gap-3 text-sm ink-muted">
             <p>
               <strong>Date:</strong> {formatDate(event.eventDate)}
             </p>
@@ -89,7 +89,7 @@ export default function EventDetailModal({
 
         {/* RSVP Buttons */}
         <div className="mt-6">
-          <h4 className="text-sm font-semibold text-gray-700">Your RSVP</h4>
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Your RSVP</h4>
           <div className="mt-2 flex gap-2">
             {(["GOING", "MAYBE", "NOT_GOING"] as RsvpStatus[]).map((status) => (
               <button
@@ -99,7 +99,7 @@ export default function EventDetailModal({
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   rsvpStatus === status
                     ? "bg-primary-600 text-white"
-                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    : "border subtle-border text-gray-700 hover:bg-white/70 dark:text-gray-200 dark:hover:bg-white/10"
                 }`}
               >
                 {status.replace("_", " ")}
@@ -110,7 +110,7 @@ export default function EventDetailModal({
 
         {/* Attendees */}
         <div className="mt-6">
-          <h4 className="text-sm font-semibold text-gray-700">
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Attendees ({attendees.length})
           </h4>
           {loading ? (
@@ -122,7 +122,7 @@ export default function EventDetailModal({
                   key={`${a.eventId}-${a.userId}`}
                   className="flex items-center justify-between py-2 text-sm"
                 >
-                  <span className="text-gray-700">{a.userName}</span>
+                  <span className="text-gray-700 dark:text-gray-200">{a.userName}</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       a.status === "GOING"
@@ -137,7 +137,7 @@ export default function EventDetailModal({
                 </div>
               ))}
               {attendees.length === 0 && (
-                <p className="text-sm text-gray-400">No attendees yet</p>
+                <p className="text-sm ink-muted">No attendees yet</p>
               )}
             </div>
           )}

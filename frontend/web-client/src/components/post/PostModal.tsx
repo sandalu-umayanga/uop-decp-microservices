@@ -42,13 +42,13 @@ export default function PostModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="glass-panel w-full max-w-lg rounded-2xl p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Create Post</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create Post</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="ink-muted hover:text-gray-800 dark:hover:text-gray-100"
           >
             ✕
           </button>
@@ -59,7 +59,7 @@ export default function PostModal({
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
             rows={4}
-            className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 p-3 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             autoFocus
           />
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
@@ -67,7 +67,7 @@ export default function PostModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>

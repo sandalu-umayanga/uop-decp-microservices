@@ -23,7 +23,7 @@ export default function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${selected ? "bg-primary-50 dark:bg-primary-900/50" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+      className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${selected ? "bg-primary-500/15 dark:bg-primary-500/30" : "hover:bg-white/60 dark:hover:bg-white/10"
         }`}
     >
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
@@ -33,13 +33,13 @@ export default function ConversationItem({
         <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
           {displayName}
         </p>
-        <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+        <p className="truncate text-xs ink-muted">
           {conversation.lastMessage || "No messages yet"}
         </p>
       </div>
       {conversation.lastMessageAt && (
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">
+          <span className="text-[10px] ink-muted">
             {formatRelativeTime(conversation.lastMessageAt)}
           </span>
           {conversation.unreadCount > 0 && (

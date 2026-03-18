@@ -22,24 +22,24 @@ export default function EventCard({
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="glass-panel rounded-2xl p-5 transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between">
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${categoryColors[event.category] || "bg-gray-50 text-gray-700"}`}
         >
           {event.category}
         </span>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm ink-muted">
           {event.attendeeCount} attending
         </span>
       </div>
-      <h3 className="mt-3 text-lg font-semibold text-gray-900">
+      <h3 className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
         {event.title}
       </h3>
-      <p className="mt-1 line-clamp-2 text-sm text-gray-600">
+      <p className="mt-1 line-clamp-2 text-sm ink-muted">
         {event.description}
       </p>
-      <div className="mt-3 space-y-1 text-sm text-gray-500">
+      <div className="mt-3 space-y-1 text-sm ink-muted">
         <p className="flex items-center gap-1.5">
           <svg
             className="h-4 w-4"
@@ -100,7 +100,7 @@ export default function EventCard({
         {onViewDetails && (
           <button
             onClick={() => onViewDetails(event)}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-lg border subtle-border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/70 dark:text-gray-200 dark:hover:bg-white/10"
           >
             View Details
           </button>

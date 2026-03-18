@@ -87,10 +87,10 @@ export default function ChatPage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-64px)] max-w-7xl dark:bg-gray-900">
+    <div className="mx-auto flex h-[calc(100vh-96px)] max-w-7xl px-4 pb-4 sm:px-6">
       {/* Sidebar */}
-      <div className="flex w-80 flex-shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-800">
+      <div className="glass-panel flex w-80 flex-shrink-0 flex-col rounded-l-2xl border-r subtle-border">
+        <div className="flex items-center justify-between border-b subtle-border p-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Messages</h2>
           <div className="flex items-center gap-2">
             <span
@@ -98,7 +98,7 @@ export default function ChatPage() {
             />
             <button
               onClick={() => setShowUserSearch(true)}
-              className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+              className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-3 py-1.5 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:brightness-110"
             >
               + New
             </button>
@@ -106,7 +106,7 @@ export default function ChatPage() {
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           {conversations.length === 0 ? (
-            <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p className="p-4 text-center text-sm ink-muted">
               No conversations yet
             </p>
           ) : (
@@ -124,11 +124,11 @@ export default function ChatPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-900/50">
+      <div className="glass-panel flex flex-1 flex-col rounded-r-2xl border-l-0">
         {currentConversation ? (
           <>
             {/* Chat Header */}
-            <div className="border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+            <div className="border-b subtle-border bg-white/60 px-6 py-4 dark:bg-white/5">
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 {(currentConversation.participantNames || [])
                   .filter(
@@ -153,19 +153,19 @@ export default function ChatPage() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <div className="border-t subtle-border bg-white/60 p-4 dark:bg-white/5">
               <form onSubmit={handleSend} className="flex gap-3">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                  className="flex-1 rounded-xl border subtle-border bg-white/80 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || !connected}
-                  className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:brightness-110 disabled:opacity-50"
                 >
                   Send
                 </button>
@@ -191,7 +191,7 @@ export default function ChatPage() {
               <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-300">
                 Your Messages
               </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+              <p className="mt-1 text-sm ink-muted">
                 Select a conversation or start a new one
               </p>
             </div>

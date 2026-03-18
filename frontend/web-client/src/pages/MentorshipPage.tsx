@@ -35,18 +35,18 @@ export default function MentorshipPage() {
       : tabs;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Mentorship</h1>
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">Mentorship</h1>
 
-      <div className="mb-6 flex gap-1 rounded-lg bg-gray-100 p-1">
+      <div className="glass-panel mb-6 flex gap-1 rounded-2xl p-1.5">
         {visibleTabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition ${
+            className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
               tab === t.key
-                ? "bg-white text-primary-700 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-primary-500/15 text-primary-700 shadow-sm dark:bg-primary-500/30 dark:text-primary-200"
+                : "ink-muted hover:bg-white/60 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-gray-100"
             }`}
           >
             {t.label}
@@ -101,11 +101,11 @@ function DiscoverTab() {
           placeholder="Filter by expertise..."
           value={expertise}
           onChange={(e) => setExpertise(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
+          className="w-full max-w-md rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
         />
       </div>
       {matches.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">
+        <p className="py-8 text-center ink-muted">
           No mentor matches found.
         </p>
       ) : (
@@ -113,21 +113,21 @@ function DiscoverTab() {
           {matches.map((m) => (
             <div
               key={m.userId}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+              className="glass-panel rounded-2xl p-5"
             >
               <div className="mb-2 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500/15 text-sm font-bold text-primary-700 dark:bg-primary-500/30 dark:text-primary-200">
                   {m.userName?.charAt(0)?.toUpperCase() || "M"}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{m.userName}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-semibold text-gray-900 dark:text-white">{m.userName}</p>
+                  <p className="text-xs ink-muted">
                     {m.profile.department}
                   </p>
                 </div>
               </div>
               {m.profile.bio && (
-                <p className="mb-3 text-sm text-gray-600 line-clamp-3">
+                <p className="mb-3 line-clamp-3 text-sm ink-muted">
                   {m.profile.bio}
                 </p>
               )}
@@ -135,25 +135,25 @@ function DiscoverTab() {
                 {m.profile.expertise?.slice(0, 4).map((s: string) => (
                   <span
                     key={s}
-                    className="rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700"
+                    className="rounded-full bg-primary-500/15 px-2 py-0.5 text-xs text-primary-700 dark:bg-primary-500/30 dark:text-primary-200"
                   >
                     {s}
                   </span>
                 ))}
               </div>
               {m.commonInterests.length > 0 && (
-                <p className="mb-2 text-xs text-green-600">
+                <p className="mb-2 text-xs text-emerald-600 dark:text-emerald-400">
                   {m.commonInterests.length} common interests
                 </p>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs ink-muted">
                   Score: {m.compatibilityScore}%
                 </span>
                 {user?.role === "STUDENT" && (
                   <button
                     onClick={() => setShowRequestModal(m.userId)}
-                    className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700"
+                    className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-primary-500/20 transition hover:brightness-110"
                   >
                     Request Mentorship
                   </button>
@@ -216,14 +216,14 @@ function SendRequestModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6"
+        className="glass-panel w-full max-w-md rounded-2xl p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-4 text-lg font-bold text-gray-900">
+        <h2 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
           Request Mentorship
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -233,19 +233,19 @@ function SendRequestModal({
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <input
             type="text"
             placeholder="Topics of interest (comma-separated)"
             value={topics}
             onChange={(e) => setTopics(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <select
             value={duration}
             onChange={(e) => setDuration(e.target.value as ProposedDuration)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           >
             <option value="ONE_MONTH">1 Month</option>
             <option value="THREE_MONTHS">3 Months</option>
@@ -256,14 +256,14 @@ function SendRequestModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-500/20 transition hover:brightness-110 disabled:opacity-50"
             >
               {submitting ? "Sending..." : "Send Request"}
             </button>
@@ -312,33 +312,33 @@ function RequestsTab() {
   return (
     <div className="space-y-3">
       {requests.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">No requests.</p>
+        <p className="py-8 text-center ink-muted">No requests.</p>
       ) : (
         requests.map((r) => (
           <div
             key={r.id}
-            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+            className="glass-panel flex items-center justify-between rounded-2xl p-4"
           >
             <div>
-              <p className="font-medium text-gray-900">
+              <p className="font-medium text-gray-900 dark:text-white">
                 {r.mentorUserName} ↔ {r.menteeUserName}
               </p>
               {r.message && (
-                <p className="text-sm text-gray-600">{r.message}</p>
+                <p className="text-sm ink-muted">{r.message}</p>
               )}
               {r.topics.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {r.topics.map((t: string) => (
                     <span
                       key={t}
-                      className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                      className="rounded-full bg-white/70 px-2 py-0.5 text-xs ink-muted dark:bg-white/10"
                     >
                       {t}
                     </span>
                   ))}
                 </div>
               )}
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs ink-muted">
                 {formatDate(r.createdAt)} · {r.status} ·{" "}
                 {r.proposedDuration?.replace(/_/g, " ")}
               </p>
@@ -347,13 +347,13 @@ function RequestsTab() {
               <div className="flex gap-2">
                 <button
                   onClick={() => respond(r.id, "ACCEPTED")}
-                  className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                  className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
                 >
                   Accept
                 </button>
                 <button
                   onClick={() => respond(r.id, "REJECTED", "Not available")}
-                  className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+                  className="rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700"
                 >
                   Decline
                 </button>
@@ -401,21 +401,21 @@ function RelationshipsTab() {
   return (
     <div className="space-y-3">
       {relationships.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">
+        <p className="py-8 text-center ink-muted">
           No active mentorships yet.
         </p>
       ) : (
         relationships.map((r) => (
           <div
             key={r.id}
-            className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+            className="glass-panel rounded-2xl p-4"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-gray-900 dark:text-white">
                   {r.mentorUserName} ↔ {r.menteeUserName}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs ink-muted">
                   Since {formatDate(r.startDate)} ·{" "}
                   {r.frequency?.replace(/_/g, " ")} ·{" "}
                   {r.preferredChannel?.replace(/_/g, " ")}
@@ -427,13 +427,13 @@ function RelationshipsTab() {
                     ? "bg-green-100 text-green-700"
                     : r.status === "PAUSED"
                       ? "bg-yellow-100 text-yellow-700"
-                      : "bg-gray-100 text-gray-600"
+                      : "bg-white/70 text-gray-700 dark:bg-white/10 dark:text-gray-200"
                 }`}
               >
                 {r.status}
               </span>
             </div>
-            {r.goals && <p className="mt-2 text-sm text-gray-600">{r.goals}</p>}
+              {r.goals && <p className="mt-2 text-sm ink-muted">{r.goals}</p>}
           </div>
         ))
       )}
@@ -502,13 +502,13 @@ function MyProfileTab() {
 
   if (!profile && !editing) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-        <p className="mb-4 text-gray-500">
+      <div className="glass-panel rounded-2xl p-8 text-center">
+        <p className="mb-4 ink-muted">
           You haven't created a mentorship profile yet.
         </p>
         <button
           onClick={() => setEditing(true)}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+          className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:brightness-110"
         >
           Create Profile
         </button>
@@ -518,8 +518,8 @@ function MyProfileTab() {
 
   if (editing) {
     return (
-      <div className="mx-auto max-w-lg rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">
+      <div className="glass-panel mx-auto max-w-lg rounded-2xl p-6">
+        <h2 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
           {profile ? "Edit" : "Create"} Mentorship Profile
         </h2>
         <div className="space-y-4">
@@ -528,7 +528,7 @@ function MyProfileTab() {
             onChange={(e) =>
               setForm({ ...form, role: e.target.value as MentorshipRole })
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           >
             <option value="MENTOR">Mentor</option>
             <option value="MENTEE">Mentee</option>
@@ -538,7 +538,7 @@ function MyProfileTab() {
             placeholder="Department"
             value={form.department}
             onChange={(e) => setForm({ ...form, department: e.target.value })}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <input
             type="number"
@@ -550,14 +550,14 @@ function MyProfileTab() {
                 yearsOfExperience: parseInt(e.target.value) || 0,
               })
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <textarea
             placeholder="Bio..."
             value={form.bio}
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
             rows={3}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <input
             type="text"
@@ -572,7 +572,7 @@ function MyProfileTab() {
                   .filter(Boolean),
               })
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <input
             type="text"
@@ -587,7 +587,7 @@ function MyProfileTab() {
                   .filter(Boolean),
               })
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <select
             value={form.availability}
@@ -607,19 +607,19 @@ function MyProfileTab() {
             onChange={(e) =>
               setForm({ ...form, linkedInUrl: e.target.value || undefined })
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-primary-500"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setEditing(false)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               onClick={save}
               disabled={saving}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-500/20 transition hover:brightness-110 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save"}
             </button>
@@ -630,32 +630,32 @@ function MyProfileTab() {
   }
 
   return (
-    <div className="mx-auto max-w-lg rounded-xl border border-gray-200 bg-white p-6">
+    <div className="glass-panel mx-auto max-w-lg rounded-2xl p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           My Mentorship Profile
         </h2>
         <button
           onClick={() => setEditing(true)}
-          className="text-sm text-primary-600 hover:text-primary-700"
+          className="text-sm font-semibold text-primary-600 hover:text-primary-700"
         >
           Edit
         </button>
       </div>
       <div className="mb-2 flex items-center gap-2">
-        <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700">
+        <span className="rounded-full bg-primary-500/15 px-2.5 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-500/30 dark:text-primary-200">
           {profile!.role}
         </span>
-        <span className="text-sm text-gray-500">{profile!.department}</span>
+        <span className="text-sm ink-muted">{profile!.department}</span>
       </div>
-      <p className="mb-3 text-gray-700">{profile!.bio}</p>
+      <p className="mb-3 text-gray-700 dark:text-gray-200">{profile!.bio}</p>
       <div className="mb-3">
-        <p className="text-xs font-medium text-gray-500 mb-1">Expertise</p>
+        <p className="mb-1 text-xs font-medium ink-muted">Expertise</p>
         <div className="flex flex-wrap gap-1.5">
           {profile!.expertise.map((s: string) => (
             <span
               key={s}
-              className="rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700"
+              className="rounded-full bg-primary-500/15 px-2 py-0.5 text-xs text-primary-700 dark:bg-primary-500/30 dark:text-primary-200"
             >
               {s}
             </span>
@@ -663,19 +663,19 @@ function MyProfileTab() {
         </div>
       </div>
       <div className="mb-3">
-        <p className="text-xs font-medium text-gray-500 mb-1">Interests</p>
+        <p className="mb-1 text-xs font-medium ink-muted">Interests</p>
         <div className="flex flex-wrap gap-1.5">
           {profile!.interests.map((s: string) => (
             <span
               key={s}
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+              className="rounded-full bg-white/70 px-2 py-0.5 text-xs ink-muted dark:bg-white/10"
             >
               {s}
             </span>
           ))}
         </div>
       </div>
-      <div className="text-sm text-gray-500">
+      <div className="text-sm ink-muted">
         <p>
           {profile!.yearsOfExperience} years experience ·{" "}
           {profile!.availability?.replace(/_/g, " ")}

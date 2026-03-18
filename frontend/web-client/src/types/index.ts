@@ -147,6 +147,22 @@ export type ResearchCategory =
   | "CONFERENCE"
   | "WORKSHOP";
 
+export type ProjectRole = "OWNER" | "COLLABORATOR" | "VIEWER";
+
+export interface ProjectMemberDTO {
+  id: number;
+  userId: number;
+  userName: string;
+  role: ProjectRole;
+  joinedAt: string;
+}
+
+export interface AddProjectMemberRequest {
+  userId: number;
+  userName: string;
+  role: ProjectRole;
+}
+
 export interface ResearchResponse {
   id: number;
   title: string;
@@ -161,6 +177,7 @@ export interface ResearchResponse {
   citations: number;
   createdBy: string;
   createdByName: string;
+  members: ProjectMemberDTO[];
   createdAt: string;
   updatedAt: string;
 }

@@ -257,6 +257,7 @@ public class ResearchService {
                 .citations(research.getCitations())
                 .createdBy(research.getCreatedBy())
                 .createdByName(research.getCreatedByName())
+                .members(collaborationService.getProjectMembers(research.getId()))
                 .createdAt(research.getCreatedAt())
                 .updatedAt(research.getUpdatedAt())
                 .build();

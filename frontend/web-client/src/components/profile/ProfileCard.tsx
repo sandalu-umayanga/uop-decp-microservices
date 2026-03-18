@@ -7,7 +7,7 @@ interface ProfileCardProps {
 
 export default function ProfileCard({ user, onMessage }: ProfileCardProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="glass-panel rounded-2xl p-6">
       <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-700">
           {user.profilePictureUrl ? (
@@ -21,20 +21,20 @@ export default function ProfileCard({ user, onMessage }: ProfileCardProps) {
           )}
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {user.fullName}
           </h3>
-          <p className="text-sm text-gray-500">@{user.username}</p>
+          <p className="text-sm ink-muted">@{user.username}</p>
           <span className="mt-1 inline-block rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
             {user.role}
           </span>
         </div>
       </div>
-      {user.bio && <p className="mt-4 text-sm text-gray-600">{user.bio}</p>}
+      {user.bio && <p className="mt-4 text-sm ink-muted">{user.bio}</p>}
       {onMessage && (
         <button
           onClick={onMessage}
-          className="mt-4 w-full rounded-lg border border-primary-600 px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50"
+          className="mt-4 w-full rounded-xl border border-primary-500/40 bg-primary-500/10 px-4 py-2 text-sm font-medium text-primary-700 transition hover:bg-primary-500/20 dark:text-primary-200"
         >
           Send Message
         </button>

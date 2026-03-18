@@ -21,9 +21,11 @@ import NotFoundPage from "./pages/NotFoundPage";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900 transition-colors dark:bg-gray-900 dark:text-gray-100">
+    <div className="app-shell relative flex min-h-screen flex-col overflow-x-hidden transition-colors">
+      <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-primary-300/25 blur-3xl dark:bg-primary-700/20" />
+      <div className="pointer-events-none absolute -right-24 top-1/4 h-64 w-64 rounded-full bg-emerald-300/25 blur-3xl dark:bg-emerald-600/20" />
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="relative z-10 flex-1 py-4 sm:py-6">{children}</main>
       <Footer />
     </div>
   );

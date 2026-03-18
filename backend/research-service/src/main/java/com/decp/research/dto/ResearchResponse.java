@@ -29,6 +29,7 @@ public class ResearchResponse {
     private Long citations;
     private Long createdBy;
     private String createdByName;
+    private List<ProjectMemberDTO> members;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

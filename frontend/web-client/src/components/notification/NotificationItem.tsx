@@ -24,19 +24,19 @@ export default function NotificationItem({
 }: NotificationItemProps) {
   return (
     <div
-      className={`flex items-start gap-3 rounded-lg border p-4 transition-colors ${
+      className={`flex items-start gap-3 rounded-xl border p-4 transition-colors ${
         notification.read
-          ? "border-gray-100 bg-white"
-          : "border-primary-100 bg-primary-50/50"
+          ? "subtle-border bg-white/70 dark:bg-white/5"
+          : "border-primary-300/50 bg-primary-500/10 dark:bg-primary-500/20"
       }`}
     >
       <span className="text-xl">{typeIcons[notification.type] || "🔔"}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
           {notification.title}
         </p>
-        <p className="mt-0.5 text-sm text-gray-600">{notification.message}</p>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-0.5 text-sm ink-muted">{notification.message}</p>
+        <p className="mt-1 text-xs ink-muted">
           {formatRelativeTime(notification.createdAt)}
         </p>
       </div>
@@ -53,7 +53,7 @@ export default function NotificationItem({
         {onDelete && (
           <button
             onClick={() => onDelete(notification.id)}
-            className="rounded p-1 text-xs text-gray-400 hover:bg-gray-100 hover:text-red-500"
+            className="rounded p-1 text-xs ink-muted hover:bg-white/70 hover:text-red-500 dark:hover:bg-white/10"
             title="Delete"
           >
             ✕

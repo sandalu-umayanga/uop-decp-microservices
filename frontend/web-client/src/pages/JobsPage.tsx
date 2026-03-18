@@ -196,13 +196,13 @@ export default function JobsPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Job Board</h1>
         {(user?.role === "ALUMNI" || user?.role === "ADMIN") && (
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+            className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/20 transition hover:brightness-110"
           >
             + Post a Job
           </button>
@@ -211,8 +211,8 @@ export default function JobsPage() {
 
       {/* Create Job Form */}
       {showCreateForm && (
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-4 font-semibold text-gray-900">Post New Job</h3>
+        <div className="glass-panel stagger-in mb-6 rounded-2xl p-5">
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Post New Job</h3>
           <form
             onSubmit={handleCreateJob}
             className="grid gap-4 sm:grid-cols-2"
@@ -222,25 +222,25 @@ export default function JobsPage() {
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Job Title *"
               required
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <input
               value={newCompany}
               onChange={(e) => setNewCompany(e.target.value)}
               placeholder="Company *"
               required
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <input
               value={newLocation}
               onChange={(e) => setNewLocation(e.target.value)}
               placeholder="Location"
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <select
               value={newType}
               onChange={(e) => setNewType(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             >
               <option value="FULL_TIME">Full Time</option>
               <option value="PART_TIME">Part Time</option>
@@ -252,20 +252,20 @@ export default function JobsPage() {
               onChange={(e) => setNewDescription(e.target.value)}
               placeholder="Description"
               rows={3}
-              className="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="sm:col-span-2 rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <div className="sm:col-span-2 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:brightness-110 disabled:opacity-50"
               >
                 {creating ? "Posting..." : "Post Job"}
               </button>
@@ -280,12 +280,12 @@ export default function JobsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search jobs by title or company..."
-          className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="flex-1 rounded-xl border subtle-border bg-white/80 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
         />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="rounded-xl border subtle-border bg-white/80 px-4 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
         >
           <option value="">All Types</option>
           <option value="FULL_TIME">Full Time</option>
@@ -300,7 +300,7 @@ export default function JobsPage() {
       {/* Jobs Grid */}
       <div className="grid gap-4 md:grid-cols-2">
         {filtered.length === 0 ? (
-          <div className="md:col-span-2 rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
+          <div className="glass-panel md:col-span-2 rounded-2xl p-8 text-center ink-muted">
             No jobs found
           </div>
         ) : (
@@ -349,15 +349,15 @@ export default function JobsPage() {
 
       {/* Edit Job Modal */}
       {showEditForm && selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="glass-panel w-full max-w-2xl rounded-2xl p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Edit Job: {selectedJob.title}
               </h3>
               <button
                 onClick={() => setShowEditForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="ink-muted hover:text-gray-800 dark:hover:text-gray-100"
               >
                 ✕
               </button>
@@ -371,25 +371,25 @@ export default function JobsPage() {
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Job Title *"
                 required
-                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               />
               <input
                 value={newCompany}
                 onChange={(e) => setNewCompany(e.target.value)}
                 placeholder="Company *"
                 required
-                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               />
               <input
                 value={newLocation}
                 onChange={(e) => setNewLocation(e.target.value)}
                 placeholder="Location"
-                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               />
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               >
                 <option value="FULL_TIME">Full Time</option>
                 <option value="PART_TIME">Part Time</option>
@@ -401,20 +401,20 @@ export default function JobsPage() {
                 onChange={(e) => setNewDescription(e.target.value)}
                 placeholder="Description"
                 rows={3}
-                className="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="sm:col-span-2 rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
               />
               <div className="sm:col-span-2 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowEditForm(false)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:brightness-110 disabled:opacity-50"
                 >
                   {creating ? "Saving..." : "Save Changes"}
                 </button>
@@ -426,23 +426,23 @@ export default function JobsPage() {
 
       {/* View Applications Modal */}
       {showApplications && selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="glass-panel max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Applications for {selectedJob.title}
               </h3>
               <button
                 onClick={() => setShowApplications(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="ink-muted hover:text-gray-800 dark:hover:text-gray-100"
               >
                 ✕
               </button>
             </div>
             {loadingApps ? (
-              <div className="py-8 text-center text-gray-500">Loading...</div>
+              <div className="py-8 text-center ink-muted">Loading...</div>
             ) : applications.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-8 text-center ink-muted">
                 No applications yet
               </div>
             ) : (
@@ -450,14 +450,14 @@ export default function JobsPage() {
                 {applications.map((app) => (
                   <div
                     key={app.id}
-                    className="rounded-lg border border-gray-200 p-4"
+                    className="rounded-xl border subtle-border bg-white/70 p-4 dark:bg-white/5"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
                           {app.applicantName}
                         </h4>
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="mt-1 text-sm ink-muted">
                           {app.whyInterested}
                         </p>
                         {app.resumeUrl && (
@@ -465,13 +465,13 @@ export default function JobsPage() {
                             href={app.resumeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 inline-block text-sm text-primary-600 hover:text-primary-700"
+                            className="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-700"
                           >
                             View Resume →
                           </a>
                         )}
                       </div>
-                      <div className="text-right text-xs text-gray-400">
+                      <div className="text-right text-xs ink-muted">
                         {new Date(app.appliedAt).toLocaleDateString()}
                       </div>
                     </div>

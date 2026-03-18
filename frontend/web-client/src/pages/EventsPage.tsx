@@ -87,13 +87,13 @@ export default function EventsPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Events</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Events</h1>
         {canCreate && (
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+            className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/20 transition hover:brightness-110"
           >
             + Create Event
           </button>
@@ -102,36 +102,36 @@ export default function EventsPage() {
 
       {/* Create Form */}
       {showCreate && (
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-4 font-semibold text-gray-900">Create Event</h3>
+        <div className="glass-panel stagger-in mb-6 rounded-2xl p-5">
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Create Event</h3>
           <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
             <input
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Event Title *"
               required
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <input
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
               placeholder="Location *"
               required
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <input
               type="date"
               value={form.eventDate}
               onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
               required
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <select
               value={form.category}
               onChange={(e) =>
                 setForm({ ...form, category: e.target.value as EventCategory })
               }
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>
@@ -144,14 +144,14 @@ export default function EventsPage() {
               value={form.startTime}
               onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               placeholder="Start Time"
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <input
               type="time"
               value={form.endTime}
               onChange={(e) => setForm({ ...form, endTime: e.target.value })}
               placeholder="End Time"
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <input
               type="number"
@@ -163,7 +163,7 @@ export default function EventsPage() {
                 })
               }
               placeholder="Max Attendees (0 = unlimited)"
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <textarea
               value={form.description}
@@ -172,20 +172,20 @@ export default function EventsPage() {
               }
               placeholder="Description"
               rows={3}
-              className="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="sm:col-span-2 rounded-xl border subtle-border bg-white/80 px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
             />
             <div className="sm:col-span-2 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowCreate(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-primary-600 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:brightness-110 disabled:opacity-50"
               >
                 {creating ? "Creating..." : "Create Event"}
               </button>
@@ -198,7 +198,7 @@ export default function EventsPage() {
       <div className="mb-6 flex flex-wrap gap-2">
         <button
           onClick={() => setCategoryFilter("")}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${!categoryFilter ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${!categoryFilter ? "bg-primary-600 text-white" : "bg-white/70 text-gray-600 hover:bg-white dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"}`}
         >
           All
         </button>
@@ -206,7 +206,7 @@ export default function EventsPage() {
           <button
             key={cat}
             onClick={() => setCategoryFilter(cat)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${categoryFilter === cat ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${categoryFilter === cat ? "bg-primary-600 text-white" : "bg-white/70 text-gray-600 hover:bg-white dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"}`}
           >
             {cat}
           </button>
@@ -217,7 +217,7 @@ export default function EventsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filtered.length === 0 ? (
-          <div className="md:col-span-3 rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
+          <div className="glass-panel md:col-span-3 rounded-2xl p-8 text-center ink-muted">
             No events found
           </div>
         ) : (

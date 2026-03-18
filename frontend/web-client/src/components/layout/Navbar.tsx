@@ -25,10 +25,10 @@ export default function Navbar() {
   ) => (
     <Link
       to={to}
-      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
         location.pathname === to
-          ? "bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300"
-          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+          ? "bg-primary-500/15 text-primary-700 shadow-sm dark:bg-primary-500/25 dark:text-primary-200"
+          : "ink-muted hover:bg-white/80 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-white"
       }`}
     >
       <span className="flex-shrink-0 text-current opacity-80">{icon}</span>
@@ -148,11 +148,11 @@ export default function Navbar() {
   if (!isAuthenticated) return null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+    <header className="sticky top-3 z-40 mx-4 rounded-2xl glass-panel sm:mx-6">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-emerald-500 text-sm font-bold text-white shadow-lg shadow-primary-500/25">
             P
           </div>
           <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -181,7 +181,7 @@ export default function Navbar() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="rounded-xl p-2 ink-muted hover:bg-white/80 hover:text-gray-800 dark:hover:bg-white/10 dark:hover:text-white"
           >
             {theme === "light" ? (
               <svg
@@ -217,7 +217,7 @@ export default function Navbar() {
           {/* Notifications */}
           <Link
             to="/notifications"
-            className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            className="relative rounded-xl p-2 ink-muted hover:bg-white/80 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <svg
               className="h-5 w-5"
@@ -245,7 +245,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               to="/profile"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500/15 text-sm font-semibold text-primary-700 ring-2 ring-primary-500/20 dark:bg-primary-500/30 dark:text-primary-200"
             >
               {user?.fullName?.charAt(0).toUpperCase() || "U"}
             </Link>
@@ -253,13 +253,13 @@ export default function Navbar() {
               <span className="text-sm font-medium text-gray-900 dark:text-white">
                 {user?.fullName}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs ink-muted">
                 {user?.role}
               </span>
             </div>
             <button
               onClick={handleLogout}
-              className="ml-2 rounded-lg px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              className="ml-2 rounded-xl px-3 py-1.5 text-sm ink-muted hover:bg-white/80 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-gray-100"
             >
               Logout
             </button>
@@ -268,7 +268,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile nav */}
-      <nav className="flex items-center gap-1 overflow-x-auto overflow-y-hidden border-t border-gray-100 bg-white px-4 py-2 dark:border-gray-800 dark:bg-gray-900 md:hidden">
+      <nav className="flex items-center gap-1 overflow-x-auto overflow-y-hidden border-t subtle-border px-4 py-2 md:hidden">
         {navLink("/", "Feed", icons.feed)}
         {navLink("/jobs", "Jobs", icons.jobs)}
         {navLink("/events", "Events", icons.events)}

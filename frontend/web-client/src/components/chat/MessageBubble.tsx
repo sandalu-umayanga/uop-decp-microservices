@@ -12,13 +12,13 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       <div
         className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${isOwn
           ? "rounded-br-md bg-primary-600 text-white"
-          : "rounded-bl-md bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
+          : "rounded-bl-md bg-white/80 text-gray-900 dark:bg-white/10 dark:text-gray-100"
           }`}
       >
 
         <p className="text-sm">{message.content}</p>
         <p
-          className={`mt-1 text-right text-[10px] ${isOwn ? "text-primary-200" : "text-gray-400"}`}
+          className={`mt-1 text-right text-[10px] ${isOwn ? "text-primary-100" : "ink-muted"}`}
         >
           {formatRelativeTime(message.createdAt)}
         </p>

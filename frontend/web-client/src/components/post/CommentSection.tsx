@@ -36,20 +36,20 @@ export default function CommentSection({
   };
 
   return (
-    <div className="mt-3 border-t border-gray-100 pt-3">
+    <div className="mt-3 border-t subtle-border pt-3">
       {/* Comment list */}
       <div className="max-h-60 space-y-3 overflow-y-auto">
         {post.comments.map((c, i) => (
           <div key={i} className="flex gap-2">
-            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white/70 text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-200">
               {c.username?.charAt(0).toUpperCase()}
             </div>
             <div>
               <p className="text-sm">
-                <span className="font-medium text-gray-900">{c.username}</span>{" "}
-                <span className="text-gray-700">{c.text}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{c.username}</span>{" "}
+                <span className="text-gray-700 dark:text-gray-200">{c.text}</span>
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs ink-muted">
                 {formatRelativeTime(c.timestamp)}
               </p>
             </div>
@@ -64,7 +64,7 @@ export default function CommentSection({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Write a comment..."
-            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="flex-1 rounded-lg border subtle-border bg-white/80 px-3 py-2 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           />
           <button
             type="submit"

@@ -29,11 +29,11 @@ export default function JobCard({
   const isClosed = job.status === "CLOSED";
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="glass-panel rounded-2xl p-5 transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{job.title}</h3>
             <span
               className={`rounded-full px-2 py-1 text-xs font-medium ${
                 isClosed
@@ -44,7 +44,7 @@ export default function JobCard({
               {job.status || "OPEN"}
             </span>
           </div>
-          <p className="mt-1 text-sm text-gray-600">{job.company}</p>
+          <p className="mt-1 text-sm ink-muted">{job.company}</p>
         </div>
         {job.type && (
           <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
@@ -52,7 +52,7 @@ export default function JobCard({
           </span>
         )}
       </div>
-      <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
+      <div className="mt-3 flex flex-wrap gap-4 text-sm ink-muted">
         {job.location && (
           <span className="flex items-center gap-1">
             <svg
@@ -128,11 +128,11 @@ export default function JobCard({
           {(job.applicationCount ?? 0) !== 1 ? "s" : ""}
         </span>
       </div>
-      <p className="mt-3 line-clamp-2 text-sm text-gray-600">
+      <p className="mt-3 line-clamp-2 text-sm ink-muted">
         {job.description}
       </p>
       <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-400">
+        <span className="text-xs ink-muted">
           Posted by {job.posterName}
         </span>
         <div className="flex gap-2">
@@ -151,7 +151,7 @@ export default function JobCard({
                 <button
                   onClick={() => onEdit(job)}
                   disabled={isLoading || isClosed}
-                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  className="rounded-lg bg-white/70 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/15 disabled:opacity-50"
                   title={isClosed ? "Cannot edit closed jobs" : ""}
                 >
                   Edit
@@ -209,12 +209,12 @@ export default function JobCard({
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="glass-panel w-full max-w-sm rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Delete Job Post?
             </h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm ink-muted">
               This action cannot be undone. All applications for this job will
               also be deleted.
             </p>
@@ -222,7 +222,7 @@ export default function JobCard({
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isLoading}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-lg border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10 disabled:opacity-50"
               >
                 Cancel
               </button>

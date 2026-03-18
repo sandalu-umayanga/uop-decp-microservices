@@ -3,6 +3,8 @@ import type {
   ResearchResponse,
   ResearchRequest,
   ResearchVersionResponse,
+  ProjectMemberDTO,
+  AddProjectMemberRequest,
 } from "../types";
 
 export const researchService = {
@@ -34,4 +36,14 @@ export const researchService = {
   cite: (id: number) => api.post(`/api/research/${id}/cite`),
 
   download: (id: number) => api.post(`/api/research/${id}/download`),
+
+  // Collaboration
+  getMembers: (id: number) =>
+    api.get<ProjectMemberDTO[]>(`/api/research/${id}/members`),
+
+  addMember: (id: number, data: AddProjectMemberRequest) =>
+    api.post<ProjectMemberDTO>(`/api/research/${id}/members`, data),
+
+  removeMember: (id: number, userId: number) =>
+    api.delete(`/api/research/${id}/members/${userId}`),
 };
