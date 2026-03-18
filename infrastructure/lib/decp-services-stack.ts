@@ -232,6 +232,7 @@ export class DecpServicesStack extends cdk.Stack {
         minHealthyPercent: 0,
         maxHealthyPercent: 100,
         circuitBreaker: { enable: false, rollback: false },
+        healthCheckGracePeriod: cdk.Duration.seconds(60),
       });
 
       if (svc.isPublic) {
