@@ -76,7 +76,7 @@ spring:
 
         # Messaging Service WebSocket
         - id: messaging-service-ws
-          uri: ${MESSAGING_SERVICE_WS_URL:ws://localhost:8087}
+          uri: ${MESSAGING_SERVICE_WS_URL:http://localhost:8087}
           predicates:
             - Path=/ws/**
 

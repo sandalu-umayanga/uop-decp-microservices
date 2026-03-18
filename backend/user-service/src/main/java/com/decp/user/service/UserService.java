@@ -6,8 +6,10 @@ import com.decp.user.model.User;
 import com.decp.user.model.UserRole;
 import com.decp.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -60,7 +62,7 @@ public class UserService {
 
     public com.decp.user.dto.UserAuthDTO getUserAuthByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         com.decp.user.dto.UserAuthDTO dto = new com.decp.user.dto.UserAuthDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
