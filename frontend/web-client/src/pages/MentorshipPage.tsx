@@ -6,11 +6,15 @@ import type {
   MentorshipMatchDTO,
   MentorshipRequestResponse,
   MentorshipRelationshipResponse,
+  MentorshipFeedbackDTO,
   MentorshipProfileRequest,
   MentorshipRequestRequest,
   MentorshipRole,
   Availability,
   ProposedDuration,
+  MeetingFrequency,
+  PreferredChannel,
+  RelationshipStatus,
 } from "../types";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorAlert from "../components/common/ErrorAlert";
@@ -77,8 +81,10 @@ function DiscoverTab() {
       setLoading(true);
       setNoProfile(false);
       if (isStudent) {
-        const res = await mentorshipService.getMentors();
-        setMatches(res.data.map((p) => ({ userId: p.userId, userName: p.userName, profile: p, compatibilityScore: 0, commonInterests: [], distanceScore: 0 })));
+        const res = expertise
+          ? await mentorshipService.getAdvancedMatches({ expertise })
+          : await mentorshipService.getMatches();
+        setMatches(res.data);
       } else {
         // Check profile exists first
         await mentorshipService.getMyProfile();
@@ -414,61 +420,370 @@ function RelationshipsTab() {
     MentorshipRelationshipResponse[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [showUpdate, setShowUpdate] = useState<MentorshipRelationshipResponse | null>(null);
+  const [showFeedback, setShowFeedback] = useState<MentorshipRelationshipResponse | null>(null);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await mentorshipService.getRelationships();
-        setRelationships(res.data);
-      } catch {
-        /* ignore */
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchRelationships = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await mentorshipService.getRelationships();
+      setRelationships(res.data);
+    } catch {
+      setError("Failed to load mentorship relationships");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchRelationships();
+  }, [fetchRelationships]);
+
+  const endRelationship = async (relationshipId: number) => {
+    const confirmed = window.confirm(
+      "End this mentorship relationship? This action cannot be undone.",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await mentorshipService.endRelationship(relationshipId);
+      await fetchRelationships();
+    } catch {
+      setError("Failed to end mentorship relationship");
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorAlert message={error} onClose={() => setError("")} />;
 
   return (
-    <div className="space-y-3">
-      {relationships.length === 0 ? (
-        <p className="py-8 text-center ink-muted">
-          No active mentorships yet.
-        </p>
-      ) : (
-        relationships.map((r) => (
-          <div
-            key={r.id}
-            className="glass-panel rounded-2xl p-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {r.mentorUserName} ↔ {r.menteeUserName}
-                </p>
-                <p className="text-xs ink-muted">
-                  Since {formatDate(r.startDate)} ·{" "}
-                  {r.frequency?.replace(/_/g, " ")} ·{" "}
-                  {r.preferredChannel?.replace(/_/g, " ")}
-                </p>
+    <>
+      <div className="space-y-3">
+        {relationships.length === 0 ? (
+          <p className="py-8 text-center ink-muted">
+            No active mentorships yet.
+          </p>
+        ) : (
+          relationships.map((r) => (
+            <div
+              key={r.id}
+              className="glass-panel rounded-2xl p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {r.mentorUserName} ↔ {r.menteeUserName}
+                  </p>
+                  <p className="text-xs ink-muted">
+                    Since {formatDate(r.startDate)} ·{" "}
+                    {r.frequency?.replace(/_/g, " ")} ·{" "}
+                    {r.preferredChannel?.replace(/_/g, " ")}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    r.status === "ACTIVE"
+                      ? "bg-green-100 text-green-700"
+                      : r.status === "PAUSED"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-white/70 text-gray-700 dark:bg-white/10 dark:text-gray-200"
+                  }`}
+                >
+                  {r.status}
+                </span>
               </div>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  r.status === "ACTIVE"
-                    ? "bg-green-100 text-green-700"
-                    : r.status === "PAUSED"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-white/70 text-gray-700 dark:bg-white/10 dark:text-gray-200"
-                }`}
-              >
-                {r.status}
-              </span>
-            </div>
               {r.goals && <p className="mt-2 text-sm ink-muted">{r.goals}</p>}
-          </div>
-        ))
+
+              <div className="mt-4 flex flex-wrap justify-end gap-2">
+                <button
+                  onClick={() => setShowFeedback(r)}
+                  className="rounded-xl border subtle-border px-3 py-1.5 text-xs font-semibold ink-muted hover:bg-white/70 dark:hover:bg-white/10"
+                >
+                  Feedback
+                </button>
+                <button
+                  onClick={() => setShowUpdate(r)}
+                  className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Update
+                </button>
+                <button
+                  onClick={() => endRelationship(r.id)}
+                  className="rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700"
+                >
+                  End
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {showUpdate && (
+        <UpdateRelationshipModal
+          relationship={showUpdate}
+          onClose={() => setShowUpdate(null)}
+          onSaved={async () => {
+            setShowUpdate(null);
+            await fetchRelationships();
+          }}
+        />
       )}
+
+      {showFeedback && (
+        <FeedbackModal
+          relationship={showFeedback}
+          onClose={() => setShowFeedback(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function UpdateRelationshipModal({
+  relationship,
+  onClose,
+  onSaved,
+}: {
+  relationship: MentorshipRelationshipResponse;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [goals, setGoals] = useState(relationship.goals || "");
+  const [frequency, setFrequency] = useState<MeetingFrequency>(
+    relationship.frequency || "BIWEEKLY",
+  );
+  const [preferredChannel, setPreferredChannel] = useState<PreferredChannel>(
+    relationship.preferredChannel || "VIDEO_CALL",
+  );
+  const [status, setStatus] = useState<RelationshipStatus>(
+    relationship.status || "ACTIVE",
+  );
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      await mentorshipService.updateRelationship(relationship.id, {
+        goals: goals.trim(),
+        frequency,
+        preferredChannel,
+        status,
+      });
+      onSaved();
+    } catch {
+      alert("Failed to update mentorship relationship");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="glass-panel w-full max-w-lg rounded-2xl p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+          Update Mentorship
+        </h2>
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <textarea
+            value={goals}
+            onChange={(e) => setGoals(e.target.value)}
+            rows={3}
+            placeholder="Relationship goals"
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
+          />
+
+          <select
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value as MeetingFrequency)}
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
+          >
+            <option value="WEEKLY">Weekly</option>
+            <option value="BIWEEKLY">Biweekly</option>
+            <option value="MONTHLY">Monthly</option>
+          </select>
+
+          <select
+            value={preferredChannel}
+            onChange={(e) => setPreferredChannel(e.target.value as PreferredChannel)}
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
+          >
+            <option value="EMAIL">Email</option>
+            <option value="PHONE">Phone</option>
+            <option value="VIDEO_CALL">Video Call</option>
+            <option value="IN_PERSON">In Person</option>
+            <option value="MESSAGING">Messaging</option>
+          </select>
+
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as RelationshipStatus)}
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
+          >
+            <option value="ACTIVE">Active</option>
+            <option value="PAUSED">Paused</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackModal({
+  relationship,
+  onClose,
+}: {
+  relationship: MentorshipRelationshipResponse;
+  onClose: () => void;
+}) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [history, setHistory] = useState<MentorshipFeedbackDTO[]>([]);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      setLoadingHistory(true);
+      const res = await mentorshipService.getFeedback(relationship.id);
+      setHistory(res.data);
+    } catch {
+      setHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [relationship.id]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await mentorshipService.addFeedback(relationship.id, {
+        rating,
+        comment: comment.trim(),
+      });
+      setComment("");
+      await loadHistory();
+    } catch {
+      alert("Failed to submit feedback");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="glass-panel w-full max-w-2xl rounded-2xl p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+          Feedback · {relationship.mentorUserName} ↔ {relationship.menteeUserName}
+        </h2>
+
+        <form onSubmit={handleSubmit} className="mb-5 space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide ink-muted">
+              Rating
+            </label>
+            <select
+              value={rating}
+              onChange={(e) => setRating(Number(e.target.value))}
+              className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
+            >
+              <option value={5}>5 - Excellent</option>
+              <option value={4}>4 - Good</option>
+              <option value={3}>3 - Average</option>
+              <option value={2}>2 - Needs improvement</option>
+              <option value={1}>1 - Poor</option>
+            </select>
+          </div>
+
+          <textarea
+            placeholder="Share your feedback"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={3}
+            className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
+          />
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border subtle-border px-4 py-2 text-sm font-medium ink-muted hover:bg-white/70 dark:hover:bg-white/10"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50"
+            >
+              {submitting ? "Submitting..." : "Submit Feedback"}
+            </button>
+          </div>
+        </form>
+
+        <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Feedback History</h3>
+          {loadingHistory ? (
+            <p className="text-sm ink-muted">Loading feedback history...</p>
+          ) : history.length === 0 ? (
+            <p className="text-sm ink-muted">No feedback submitted yet.</p>
+          ) : (
+            history.map((item) => (
+              <div key={item.id} className="rounded-xl border subtle-border bg-white/70 p-3 dark:bg-white/5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {item.givenByUserName} · {item.rating}/5
+                  </p>
+                  <p className="text-xs ink-muted">{formatDate(item.createdAt)}</p>
+                </div>
+                {item.comment && (
+                  <p className="mt-1 text-sm ink-muted">{item.comment}</p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -564,6 +879,7 @@ function MyProfileTab() {
           >
             <option value="MENTOR">Mentor</option>
             <option value="MENTEE">Mentee</option>
+            <option value="BOTH">Both</option>
           </select>
           <input
             type="text"
