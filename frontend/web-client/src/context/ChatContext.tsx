@@ -66,7 +66,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     const token = getToken();
     const stompClient = new Client({
-      brokerURL: `ws://localhost:8080/ws/chat/websocket?token=${encodeURIComponent(token || "")}`,
+      brokerURL: `ws://localhost:8080/ws/chat?token=${encodeURIComponent(token || "")}`,
       reconnectDelay: 5000,
       onConnect: () => {
         setConnected(true);
