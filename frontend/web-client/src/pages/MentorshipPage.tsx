@@ -33,10 +33,7 @@ export default function MentorshipPage() {
     { key: "my-profile", label: "My Profile" },
   ];
 
-  const visibleTabs =
-    user?.role === "STUDENT"
-      ? tabs.filter((t) => t.key !== "my-profile")
-      : tabs;
+  const visibleTabs = tabs;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -124,7 +121,7 @@ function DiscoverTab() {
         </p>
         <p className="ink-muted text-sm">
           {isStudent
-            ? "Only Alumni and Faculty can create mentorship profiles. As a student, you can browse mentors once you are matched with one."
+            ? "Create your mentorship profile from the My Profile tab first, then discover mentors and send requests."
             : "Go to the \"My Profile\" tab to create your mentorship profile first, then you can discover matches."}
         </p>
       </div>
@@ -313,6 +310,7 @@ function SendRequestModal({
 }
 
 function RequestsTab() {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<MentorshipRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -381,7 +379,8 @@ function RequestsTab() {
                 {r.proposedDuration?.replace(/_/g, " ")}
               </p>
             </div>
-            {r.status === "PENDING" && (
+            {r.status === "PENDING" &&
+              (user?.role === "ALUMNI" || user?.role === "ADMIN") && (
               <div className="flex gap-2">
                 <button
                   onClick={() => respond(r.id, "ACCEPTED")}
@@ -397,7 +396,7 @@ function RequestsTab() {
                 </button>
               </div>
             )}
-            {r.status !== "PENDING" && (
+            {(r.status !== "PENDING" || user?.role === "STUDENT") && (
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                   r.status === "ACCEPTED"
@@ -790,13 +789,14 @@ function FeedbackModal({
 
 function MyProfileTab() {
   const { user } = useAuth();
+  const defaultRole: MentorshipRole = user?.role === "STUDENT" ? "MENTEE" : "MENTOR";
   const [profile, setProfile] = useState<MentorshipProfileResponse | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<MentorshipProfileRequest>({
-    role: "MENTOR" as MentorshipRole,
+    role: defaultRole,
     department: "",
     yearsOfExperience: 0,
     expertise: [],
@@ -877,9 +877,15 @@ function MyProfileTab() {
             }
             className="w-full rounded-xl border subtle-border bg-white/80 px-4 py-2 text-sm shadow-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-400/40 dark:bg-white/5"
           >
-            <option value="MENTOR">Mentor</option>
-            <option value="MENTEE">Mentee</option>
-            <option value="BOTH">Both</option>
+            {user?.role === "STUDENT" ? (
+              <option value="MENTEE">Mentee</option>
+            ) : (
+              <>
+                <option value="MENTOR">Mentor</option>
+                <option value="MENTEE">Mentee</option>
+                <option value="BOTH">Both</option>
+              </>
+            )}
           </select>
           <input
             type="text"
