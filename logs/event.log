@@ -1,0 +1,317 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2026-03-18T16:02:37.220+05:30  INFO 648885 --- [event-service] [           main] com.decp.event.EventServiceApplication   : Starting EventServiceApplication v1.0.0-SNAPSHOT using Java 21.0.10 with PID 648885 (/media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices/backend/event-service/target/event-service-1.0.0-SNAPSHOT.jar started by snake in /media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices)
+2026-03-18T16:02:37.241+05:30  INFO 648885 --- [event-service] [           main] com.decp.event.EventServiceApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-03-18T16:02:41.990+05:30  INFO 648885 --- [event-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-18T16:02:42.270+05:30  INFO 648885 --- [event-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 223 ms. Found 2 JPA repository interfaces.
+2026-03-18T16:02:44.363+05:30  INFO 648885 --- [event-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8085 (http)
+2026-03-18T16:02:44.415+05:30  INFO 648885 --- [event-service] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-18T16:02:44.419+05:30  INFO 648885 --- [event-service] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-03-18T16:02:44.550+05:30  INFO 648885 --- [event-service] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-18T16:02:44.556+05:30  INFO 648885 --- [event-service] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 7005 ms
+2026-03-18T16:02:45.390+05:30  INFO 648885 --- [event-service] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-18T16:02:45.786+05:30  INFO 648885 --- [event-service] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-03-18T16:02:46.053+05:30  INFO 648885 --- [event-service] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-18T16:02:47.263+05:30  INFO 648885 --- [event-service] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-18T16:02:47.366+05:30  INFO 648885 --- [event-service] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-18T16:02:48.190+05:30  INFO 648885 --- [event-service] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@43deba42
+2026-03-18T16:02:48.193+05:30  INFO 648885 --- [event-service] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-18T16:02:48.355+05:30  WARN 648885 --- [event-service] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-18T16:02:50.932+05:30  INFO 648885 --- [event-service] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-18T16:02:51.037+05:30  INFO 648885 --- [event-service] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-18T16:02:52.856+05:30  WARN 648885 --- [event-service] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-18T16:02:54.042+05:30  INFO 648885 --- [event-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8085 (http) with context path ''
+2026-03-18T16:02:54.064+05:30  INFO 648885 --- [event-service] [           main] com.decp.event.EventServiceApplication   : Started EventServiceApplication in 18.506 seconds (process running for 20.669)
+2026-03-18T16:05:55.933+05:30  INFO 648885 --- [event-service] [nio-8085-exec-3] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-18T16:05:55.933+05:30  INFO 648885 --- [event-service] [nio-8085-exec-3] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-18T16:05:55.934+05:30  INFO 648885 --- [event-service] [nio-8085-exec-3] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.category,
+        e1_0.created_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.event_date,
+        e1_0.location,
+        e1_0.max_attendees,
+        e1_0.organizer,
+        e1_0.organizer_name,
+        e1_0.start_time,
+        e1_0.title 
+    from
+        events e1_0 
+    where
+        e1_0.event_date>=? 
+    order by
+        e1_0.event_date
+2026-03-18T16:12:39.937+05:30  INFO 648885 --- [event-service] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-18T16:12:39.944+05:30  INFO 648885 --- [event-service] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-18T16:12:39.950+05:30  INFO 648885 --- [event-service] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

@@ -1,0 +1,123 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2026-03-18T16:02:36.640+05:30  INFO 648886 --- [research-service] [           main] c.d.research.ResearchServiceApplication  : Starting ResearchServiceApplication v1.0.0-SNAPSHOT using Java 21.0.10 with PID 648886 (/media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices/backend/research-service/target/research-service-1.0.0-SNAPSHOT.jar started by snake in /media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices)
+2026-03-18T16:02:36.656+05:30 DEBUG 648886 --- [research-service] [           main] c.d.research.ResearchServiceApplication  : Running with Spring Boot v3.2.3, Spring v6.1.4
+2026-03-18T16:02:36.659+05:30  INFO 648886 --- [research-service] [           main] c.d.research.ResearchServiceApplication  : No active profile set, falling back to 1 default profile: "default"
+2026-03-18T16:02:47.890+05:30  WARN 648886 --- [research-service] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-18T16:02:53.405+05:30  WARN 648886 --- [research-service] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-18T16:02:53.807+05:30 DEBUG 648886 --- [research-service] [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : 17 mappings in 'requestMappingHandlerMapping'
+2026-03-18T16:02:53.929+05:30 DEBUG 648886 --- [research-service] [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**, /swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
+2026-03-18T16:02:53.990+05:30 DEBUG 648886 --- [research-service] [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-03-18T16:02:54.029+05:30 DEBUG 648886 --- [research-service] [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 2 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-03-18T16:02:54.302+05:30  INFO 648886 --- [research-service] [           main] c.d.research.ResearchServiceApplication  : Started ResearchServiceApplication in 19.412 seconds (process running for 20.911)
+2026-03-18T16:06:18.239+05:30  INFO 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-18T16:06:18.240+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-03-18T16:06:18.240+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-03-18T16:06:18.240+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2026-03-18T16:06:18.240+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@3d45ea17
+2026-03-18T16:06:18.241+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@56587330
+2026-03-18T16:06:18.241+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-03-18T16:06:18.242+05:30  INFO 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-03-18T16:06:18.246+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/actuator/health", parameters={}
+2026-03-18T16:06:18.251+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2026-03-18T16:06:18.257+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.w.s.r.ResourceHttpRequestHandler     : Resource not found
+2026-03-18T16:06:18.259+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource actuator/health.]
+2026-03-18T16:06:18.260+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 404 NOT_FOUND
+2026-03-18T16:06:18.265+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : "ERROR" dispatch for GET "/error", parameters={}
+2026-03-18T16:06:18.266+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+2026-03-18T16:06:18.281+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-03-18T16:06:18.283+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{timestamp=Wed Mar 18 16:06:18 IST 2026, status=404, error=Not Found, path=/actuator/health}]
+2026-03-18T16:06:18.303+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-2] o.s.web.servlet.DispatcherServlet        : Exiting from "ERROR" dispatch, status 404
+2026-03-18T16:06:55.044+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/api/research", parameters={}
+2026-03-18T16:06:55.044+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.decp.research.controller.ResearchController#getAllResearch(ResearchCategory, String)
+2026-03-18T16:06:55.101+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-3] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.category,
+        r1_0.citations,
+        r1_0.created_at,
+        r1_0.created_by,
+        r1_0.created_by_name,
+        r1_0.document_url,
+        r1_0.doi,
+        r1_0.downloads,
+        r1_0.research_abstract,
+        r1_0.title,
+        r1_0.updated_at,
+        r1_0.views 
+    from
+        research r1_0 
+    order by
+        r1_0.created_at desc
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.category,
+        r1_0.citations,
+        r1_0.created_at,
+        r1_0.created_by,
+        r1_0.created_by_name,
+        r1_0.document_url,
+        r1_0.doi,
+        r1_0.downloads,
+        r1_0.research_abstract,
+        r1_0.title,
+        r1_0.updated_at,
+        r1_0.views 
+    from
+        research r1_0 
+    order by
+        r1_0.created_at desc
+2026-03-18T16:06:55.107+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-03-18T16:06:55.107+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[]]
+2026-03-18T16:06:55.108+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-03-18T16:06:55.115+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/api/research", parameters={}
+2026-03-18T16:06:55.116+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.decp.research.controller.ResearchController#getAllResearch(ResearchCategory, String)
+2026-03-18T16:06:55.119+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-4] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.category,
+        r1_0.citations,
+        r1_0.created_at,
+        r1_0.created_by,
+        r1_0.created_by_name,
+        r1_0.document_url,
+        r1_0.doi,
+        r1_0.downloads,
+        r1_0.research_abstract,
+        r1_0.title,
+        r1_0.updated_at,
+        r1_0.views 
+    from
+        research r1_0 
+    order by
+        r1_0.created_at desc
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.category,
+        r1_0.citations,
+        r1_0.created_at,
+        r1_0.created_by,
+        r1_0.created_by_name,
+        r1_0.document_url,
+        r1_0.doi,
+        r1_0.downloads,
+        r1_0.research_abstract,
+        r1_0.title,
+        r1_0.updated_at,
+        r1_0.views 
+    from
+        research r1_0 
+    order by
+        r1_0.created_at desc
+2026-03-18T16:06:55.121+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json, text/plain, */*] and supported [application/json, application/*+json]
+2026-03-18T16:06:55.121+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[]]
+2026-03-18T16:06:55.122+05:30 DEBUG 648886 --- [research-service] [nio-8086-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK

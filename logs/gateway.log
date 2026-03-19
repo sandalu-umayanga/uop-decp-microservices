@@ -1,0 +1,45 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2026-03-18T16:02:36.309+05:30  INFO 648891 --- [api-gateway] [           main] com.decp.gateway.ApiGatewayApplication   : Starting ApiGatewayApplication v1.0.0-SNAPSHOT using Java 21.0.10 with PID 648891 (/media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices/backend/api-gateway/target/api-gateway-1.0.0-SNAPSHOT.jar started by snake in /media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices)
+2026-03-18T16:02:36.332+05:30  INFO 648891 --- [api-gateway] [           main] com.decp.gateway.ApiGatewayApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-03-18T16:02:40.718+05:30  INFO 648891 --- [api-gateway] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=cef387e6-11e7-3651-9ece-0f1059a79fe6
+2026-03-18T16:02:43.664+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [After]
+2026-03-18T16:02:43.671+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Before]
+2026-03-18T16:02:43.671+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Between]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Cookie]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Header]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Host]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Method]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Path]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Query]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [ReadBody]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [RemoteAddr]
+2026-03-18T16:02:43.672+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [XForwardedRemoteAddr]
+2026-03-18T16:02:43.673+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Weight]
+2026-03-18T16:02:43.673+05:30  INFO 648891 --- [api-gateway] [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [CloudFoundryRouteService]
+2026-03-18T16:02:44.735+05:30  INFO 648891 --- [api-gateway] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 15 endpoint(s) beneath base path '/actuator'
+2026-03-18T16:02:48.252+05:30  WARN 648891 --- [api-gateway] [           main] onfigReactiveWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-03-18T16:02:48.392+05:30  INFO 648891 --- [api-gateway] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-03-18T16:02:48.515+05:30 ERROR 648891 --- [api-gateway] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+

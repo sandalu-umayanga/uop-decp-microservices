@@ -1,0 +1,165 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2026-03-18T16:02:37.398+05:30  INFO 648884 --- [job-service] [           main] com.decp.job.JobServiceApplication       : Starting JobServiceApplication v1.0.0-SNAPSHOT using Java 21.0.10 with PID 648884 (/media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices/backend/job-service/target/job-service-1.0.0-SNAPSHOT.jar started by snake in /media/snake/NewVolume/ACA/sem7/CO528/mini project/new/uop-decp-microservices)
+2026-03-18T16:02:37.405+05:30  INFO 648884 --- [job-service] [           main] com.decp.job.JobServiceApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-03-18T16:02:41.979+05:30  INFO 648884 --- [job-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-18T16:02:42.322+05:30  INFO 648884 --- [job-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 309 ms. Found 2 JPA repository interfaces.
+2026-03-18T16:02:44.408+05:30  INFO 648884 --- [job-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8084 (http)
+2026-03-18T16:02:44.467+05:30  INFO 648884 --- [job-service] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-18T16:02:44.469+05:30  INFO 648884 --- [job-service] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-03-18T16:02:44.620+05:30  INFO 648884 --- [job-service] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-18T16:02:44.625+05:30  INFO 648884 --- [job-service] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 6715 ms
+2026-03-18T16:02:45.547+05:30  INFO 648884 --- [job-service] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-18T16:02:45.877+05:30  INFO 648884 --- [job-service] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-03-18T16:02:46.068+05:30  INFO 648884 --- [job-service] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-18T16:02:47.369+05:30  INFO 648884 --- [job-service] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-18T16:02:47.522+05:30  INFO 648884 --- [job-service] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-18T16:02:48.195+05:30  INFO 648884 --- [job-service] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7bb4ed71
+2026-03-18T16:02:48.203+05:30  INFO 648884 --- [job-service] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-18T16:02:48.385+05:30  WARN 648884 --- [job-service] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-18T16:02:50.993+05:30  INFO 648884 --- [job-service] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-18T16:02:51.105+05:30  INFO 648884 --- [job-service] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-18T16:02:52.244+05:30  WARN 648884 --- [job-service] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-18T16:02:53.726+05:30  INFO 648884 --- [job-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8084 (http) with context path ''
+2026-03-18T16:02:53.779+05:30  INFO 648884 --- [job-service] [           main] com.decp.job.JobServiceApplication       : Started JobServiceApplication in 18.164 seconds (process running for 20.384)
+2026-03-18T16:06:18.128+05:30  INFO 648884 --- [job-service] [nio-8084-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-18T16:06:18.128+05:30  INFO 648884 --- [job-service] [nio-8084-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-18T16:06:18.129+05:30  INFO 648884 --- [job-service] [nio-8084-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Hibernate: 
+    select
+        a1_0.id,
+        a1_0.applicant_name,
+        a1_0.applied_at,
+        a1_0.job_id,
+        a1_0.resume_url,
+        a1_0.status,
+        a1_0.user_id,
+        a1_0.why_interested 
+    from
+        job_applications a1_0 
+    where
+        a1_0.user_id=?
+Hibernate: 
+    select
+        j1_0.id,
+        j1_0.application_count,
+        j1_0.company,
+        j1_0.created_at,
+        j1_0.description,
+        j1_0.location,
+        j1_0.posted_by,
+        j1_0.poster_name,
+        j1_0.status,
+        j1_0.title,
+        j1_0.type,
+        j1_0.updated_at 
+    from
+        jobs j1_0 
+    order by
+        j1_0.created_at desc
+Hibernate: 
+    select
+        a1_0.id,
+        a1_0.applicant_name,
+        a1_0.applied_at,
+        a1_0.job_id,
+        a1_0.resume_url,
+        a1_0.status,
+        a1_0.user_id,
+        a1_0.why_interested 
+    from
+        job_applications a1_0 
+    where
+        a1_0.user_id=?
+Hibernate: 
+    select
+        j1_0.id,
+        j1_0.application_count,
+        j1_0.company,
+        j1_0.created_at,
+        j1_0.description,
+        j1_0.location,
+        j1_0.posted_by,
+        j1_0.poster_name,
+        j1_0.status,
+        j1_0.title,
+        j1_0.type,
+        j1_0.updated_at 
+    from
+        jobs j1_0 
+    order by
+        j1_0.created_at desc
+Hibernate: 
+    select
+        j1_0.id,
+        j1_0.application_count,
+        j1_0.company,
+        j1_0.created_at,
+        j1_0.description,
+        j1_0.location,
+        j1_0.posted_by,
+        j1_0.poster_name,
+        j1_0.status,
+        j1_0.title,
+        j1_0.type,
+        j1_0.updated_at 
+    from
+        jobs j1_0 
+    order by
+        j1_0.created_at desc
+Hibernate: 
+    select
+        a1_0.id,
+        a1_0.applicant_name,
+        a1_0.applied_at,
+        a1_0.job_id,
+        a1_0.resume_url,
+        a1_0.status,
+        a1_0.user_id,
+        a1_0.why_interested 
+    from
+        job_applications a1_0 
+    where
+        a1_0.user_id=?
+Hibernate: 
+    select
+        j1_0.id,
+        j1_0.application_count,
+        j1_0.company,
+        j1_0.created_at,
+        j1_0.description,
+        j1_0.location,
+        j1_0.posted_by,
+        j1_0.poster_name,
+        j1_0.status,
+        j1_0.title,
+        j1_0.type,
+        j1_0.updated_at 
+    from
+        jobs j1_0 
+    order by
+        j1_0.created_at desc
+Hibernate: 
+    select
+        a1_0.id,
+        a1_0.applicant_name,
+        a1_0.applied_at,
+        a1_0.job_id,
+        a1_0.resume_url,
+        a1_0.status,
+        a1_0.user_id,
+        a1_0.why_interested 
+    from
+        job_applications a1_0 
+    where
+        a1_0.user_id=?
+2026-03-18T16:12:39.955+05:30  INFO 648884 --- [job-service] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-18T16:12:39.957+05:30  INFO 648884 --- [job-service] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-18T16:12:39.962+05:30  INFO 648884 --- [job-service] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

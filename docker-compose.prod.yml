@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # Infrastructure (Reusing from original compose)
   postgres:
@@ -49,6 +47,7 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_5_URI=http://event-service:8085
       - SPRING_CLOUD_GATEWAY_ROUTES_6_URI=http://notification-service:8088
       - SPRING_CLOUD_GATEWAY_ROUTES_7_URI=http://research-service:8086
+      - SPRING_CLOUD_GATEWAY_ROUTES_8_URI=http://mentorship-service:8090
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-and-long-secret-key-for-decp-project}
     depends_on:
       - auth-service
@@ -58,6 +57,7 @@ services:
       - event-service
       - notification-service
       - research-service
+      - mentorship-service
 
   auth-service:
     build: ./backend/auth-service
@@ -108,6 +108,32 @@ services:
       - postgres
       - rabbitmq
 
+  event-service:
+    build: ./backend/event-service
+    container_name: decp-event-prod
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/decp_event_db
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  notification-service:
+    build: ./backend/notification-service
+    container_name: decp-notification-prod
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI_NOTIFICATIONS_PROD:-mongodb://root:rootpassword@mongodb:27017/decp_notifications?authSource=admin}
+      - RABBITMQ_HOST=rabbitmq
+      - REDIS_HOST=redis
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - redis
+
   research-service:
     build: ./backend/research-service
     container_name: decp-research-prod
@@ -119,6 +145,20 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+
+  mentorship-service:
+    build: ./backend/mentorship-service
+    container_name: decp-mentorship-prod
+    ports:
+      - "8090:8090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/decp_mentorship_db
+      - RABBITMQ_HOST=rabbitmq
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
 
   # Frontend
   web-client:
