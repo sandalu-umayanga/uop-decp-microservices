@@ -321,7 +321,7 @@ export interface TimelineEntry {
 }
 
 // ==================== Mentorship ====================
-export type MentorshipRole = "MENTOR" | "MENTEE";
+export type MentorshipRole = "MENTOR" | "MENTEE" | "BOTH";
 export type Availability = "HIGHLY_AVAILABLE" | "AVAILABLE" | "LIMITED" | "NOT_AVAILABLE";
 export type ProposedDuration =
   | "ONE_MONTH"
@@ -335,7 +335,7 @@ export type MentorshipRequestStatus =
   | "CANCELLED";
 export type RelationshipStatus = "ACTIVE" | "PAUSED" | "COMPLETED";
 export type MeetingFrequency = "WEEKLY" | "BIWEEKLY" | "MONTHLY";
-export type PreferredChannel = "EMAIL" | "VIDEO_CALL" | "PHONE" | "IN_PERSON";
+export type PreferredChannel = "EMAIL" | "VIDEO_CALL" | "PHONE" | "IN_PERSON" | "MESSAGING";
 
 export interface MentorshipProfileResponse {
   id: number;
@@ -421,9 +421,11 @@ export interface MentorshipRelationshipResponse {
 export interface MentorshipFeedbackDTO {
   id: number;
   relationshipId: number;
+  givenByUserId: number;
+  givenByUserName: string;
+  givenByRole: string;
   rating: number;
-  message: string;
-  role: MentorshipRole;
+  comment: string;
   createdAt: string;
 }
 

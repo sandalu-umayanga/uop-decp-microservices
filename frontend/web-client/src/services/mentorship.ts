@@ -76,7 +76,7 @@ export const mentorshipService = {
   // Feedback
   addFeedback: (
     relationshipId: number,
-    data: { rating: number; message: string },
+    data: { rating: number; comment: string },
   ) =>
     api.post<MentorshipFeedbackDTO>(
       `/api/mentorship/relationships/${relationshipId}/feedback`,
