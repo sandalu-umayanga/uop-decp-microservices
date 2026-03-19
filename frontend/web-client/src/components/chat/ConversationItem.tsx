@@ -15,7 +15,7 @@ export default function ConversationItem({
   onClick,
 }: ConversationItemProps) {
   const otherNames = conversation.participantNames.filter(
-    (_, i) => conversation.participants[i] !== currentUserId,
+    (_, i) => String(conversation.participants[i]) !== String(currentUserId),
   );
   const displayName =
     otherNames.length > 0 ? otherNames.join(", ") : "Conversation";
