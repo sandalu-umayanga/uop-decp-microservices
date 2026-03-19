@@ -20,6 +20,10 @@ export const mentorshipService = {
   getProfile: (userId: number) =>
     api.get<MentorshipProfileResponse>(`/api/mentorship/profile/${userId}`),
 
+  // Browse (no profile required)
+  getMentors: () =>
+    api.get<MentorshipProfileResponse[]>("/api/mentorship/mentors"),
+
   // Matches
   getMatches: () => api.get<MentorshipMatchDTO[]>("/api/mentorship/matches"),
 

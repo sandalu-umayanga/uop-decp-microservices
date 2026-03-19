@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,12 @@ public class MentorshipProfileService {
 
         MentorshipProfile saved = profileRepository.save(profile);
         return toResponse(saved);
+    }
+
+    public List<MentorshipProfileResponse> getAvailableMentors() {
+        return profileRepository.findAvailableMentors().stream()
+                .map(MentorshipProfileService::toResponse)
+                .toList();
     }
 
     public MentorshipProfileResponse getProfile(Long userId) {

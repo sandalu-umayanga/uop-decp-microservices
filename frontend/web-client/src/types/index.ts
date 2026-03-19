@@ -322,7 +322,7 @@ export interface TimelineEntry {
 
 // ==================== Mentorship ====================
 export type MentorshipRole = "MENTOR" | "MENTEE";
-export type Availability = "FULL_TIME" | "PART_TIME" | "WEEKENDS_ONLY";
+export type Availability = "HIGHLY_AVAILABLE" | "AVAILABLE" | "LIMITED" | "NOT_AVAILABLE";
 export type ProposedDuration =
   | "ONE_MONTH"
   | "THREE_MONTHS"

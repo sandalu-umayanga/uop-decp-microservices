@@ -107,7 +107,7 @@ DECP facilitates networking, career opportunities, and academic collaboration th
 ### One-command startup
 
 ```bash
-git clone https://github.com/sandalu-umayanga/uop-decp-microservices.git
+git clone https://github.com/DinethShakya23/uop-decp-microservices.git
 cd uop-decp-microservices
 cp .env.example .env
 task install:frontend
