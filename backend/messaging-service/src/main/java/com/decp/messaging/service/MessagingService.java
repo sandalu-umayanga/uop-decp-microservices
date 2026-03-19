@@ -22,16 +22,13 @@ public class MessagingService {
     private final MessageRepository messageRepository;
 
     public ConversationResponse createConversation(ConversationRequest request, Long currentUserId, String currentUserName) {
-        // Ensure current user is in participants
+        // Ensure current user is in participants, keeping IDs and names in sync
         List<Long> participants = new java.util.ArrayList<>(request.getParticipantIds());
-        if (!participants.contains(currentUserId)) {
-            participants.add(currentUserId);
-        }
-
         List<String> participantNames = request.getParticipantNames() != null
                 ? new java.util.ArrayList<>(request.getParticipantNames())
                 : new java.util.ArrayList<>();
-        if (!participantNames.contains(currentUserName)) {
+        if (!participants.contains(currentUserId)) {
+            participants.add(currentUserId);
             participantNames.add(currentUserName);
         }
 
