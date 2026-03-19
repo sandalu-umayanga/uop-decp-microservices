@@ -244,8 +244,8 @@ export class DecpServicesStack extends cdk.Stack {
         vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
         serviceName: svc.name,
         assignPublicIp: false,
-        minHealthyPercent: 0,
-        maxHealthyPercent: 100,
+        minHealthyPercent: 100,
+        maxHealthyPercent: 200,
         circuitBreaker: { enable: false, rollback: false },
         healthCheckGracePeriod: cdk.Duration.seconds(60),
         cloudMapOptions: {
@@ -260,6 +260,7 @@ export class DecpServicesStack extends cdk.Stack {
           port: svc.port,
           protocol: elbv2.ApplicationProtocol.HTTP,
           targets: [ecsService],
+          deregistrationDelay: cdk.Duration.seconds(30),
           healthCheck: {
             path: '/actuator/health',
             interval: cdk.Duration.seconds(30),
