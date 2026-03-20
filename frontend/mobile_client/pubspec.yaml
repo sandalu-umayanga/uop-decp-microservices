@@ -31,6 +31,9 @@ dependencies:
   # WebSocket
   stomp_dart_client: any
 
+  # Media picking
+  image_picker: ^1.1.2
+
   # UI helpers
   cupertino_icons: ^1.0.2
 

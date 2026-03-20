@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../data/datasources/post_remote_datasource.dart';
 import '../../data/models/post_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -50,16 +51,22 @@ class PostsNotifier extends Notifier<PostsState> {
   }
 
   Future<bool> createPost(String content,
-      {List<String> mediaUrls = const []}) async {
+      {List<XFile> images = const []}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return false;
     try {
-      final post = await ref.read(postDatasourceProvider).createPost(
-            userId: user.id,
-            fullName: user.fullName,
-            content: content,
-            mediaUrls: mediaUrls,
-          );
+      final datasource = ref.read(postDatasourceProvider);
+      final mediaUrls = <String>[];
+      for (final image in images) {
+        final url = await datasource.uploadMedia(image.path);
+        mediaUrls.add(url);
+      }
+      final post = await datasource.createPost(
+        userId: user.id,
+        fullName: user.fullName,
+        content: content,
+        mediaUrls: mediaUrls,
+      );
       state = state.copyWith(posts: [post, ...state.posts]);
       return true;
     } catch (e) {

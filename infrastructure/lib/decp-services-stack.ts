@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { DecpInfraStack } from './decp-infra-stack';
@@ -219,16 +220,30 @@ export class DecpServicesStack extends cdk.Stack {
     const { infra, corsAllowedOrigin } = props;
 
     for (const svc of SERVICES) {
+      // post-service gets a dedicated task role with S3 write permission
+      let taskRole: iam.Role | undefined;
+      if (svc.name === 'post-service') {
+        taskRole = new iam.Role(this, 'PostServiceTaskRole', {
+          assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+        });
+        infra.mediaBucket.grantWrite(taskRole);
+      }
+
       const taskDef = new ecs.FargateTaskDefinition(this, `${svc.name}-task`, {
         cpu: svc.cpu,
         memoryLimitMiB: svc.memoryMiB,
         executionRole: infra.executionRole,
+        ...(taskRole ? { taskRole } : {}),
       });
+
+      const extraEnv: Record<string, string> = svc.name === 'post-service'
+        ? { S3_BUCKET_NAME: infra.mediaBucket.bucketName }
+        : {};
 
       taskDef.addContainer(`${svc.name}-container`, {
         image: ecs.ContainerImage.fromEcrRepository(infra.ecrRepos[svc.name], 'latest'),
         portMappings: [{ containerPort: svc.port }],
-        environment: svc.getEnv(infra.infraHost, corsAllowedOrigin),
+        environment: { ...svc.getEnv(infra.infraHost, corsAllowedOrigin), ...extraEnv },
         secrets: svc.getSecrets(infra.appSecret),
         logging: ecs.LogDrivers.awsLogs({
           streamPrefix: svc.name,

@@ -6,6 +6,14 @@ export const postService = {
 
   create: (data: PostRequest) => api.post<Post>("/api/posts", data),
 
+  uploadMedia: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post<{ url: string }>("/api/posts/media", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
   like: (postId: string, userId: string) =>
     api.post<Post>(`/api/posts/${postId}/like`, { userId }),
 

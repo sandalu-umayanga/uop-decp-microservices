@@ -3,10 +3,13 @@ package com.decp.post.controller;
 import com.decp.post.dto.PostRequest;
 import com.decp.post.model.Post;
 import com.decp.post.service.PostService;
+import com.decp.post.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +19,14 @@ import java.util.Map;
 public class PostController {
 
     private final PostService postService;
+    private final S3Service s3Service;
+
+    @PostMapping("/media")
+    public ResponseEntity<Map<String, String>> uploadMedia(
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String url = s3Service.uploadFile(file);
+        return ResponseEntity.ok(Map.of("url", url));
+    }
 
     @PostMapping
     public ResponseEntity<Post> createPost(

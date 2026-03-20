@@ -5,6 +5,7 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import { Construct } from 'constructs';
@@ -36,6 +37,7 @@ export class DecpInfraStack extends cdk.Stack {
   public readonly appSecret: secretsmanager.ISecret;
   public readonly infraHost: string;
   public readonly ecrRepos: Record<string, ecr.Repository>;
+  public readonly mediaBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -157,6 +159,27 @@ export class DecpInfraStack extends cdk.Stack {
 
     this.infraHost = infraInstance.instancePrivateIp;
 
+    // ── Media S3 Bucket ───────────────────
+    this.mediaBucket = new s3.Bucket(this, 'MediaBucket', {
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: true,
+        ignorePublicAcls: true,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      }),
+      cors: [{
+        allowedMethods: [s3.HttpMethods.GET],
+        allowedOrigins: ['*'],
+        allowedHeaders: ['*'],
+      }],
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    this.mediaBucket.addToResourcePolicy(new iam.PolicyStatement({
+      actions: ['s3:GetObject'],
+      resources: [this.mediaBucket.arnForObjects('*')],
+      principals: [new iam.AnyPrincipal()],
+    }));
+
     // ── ECR Repositories ─────────────────
     this.ecrRepos = {};
     for (const name of SERVICE_NAMES) {
@@ -224,6 +247,11 @@ export class DecpInfraStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'InfraInstancePrivateIp', {
       value: this.infraHost,
       description: 'Private IP of infra EC2 — update INFRA_HOST in decp/app-secrets after deploy',
+    });
+
+    new cdk.CfnOutput(this, 'MediaBucketName', {
+      value: this.mediaBucket.bucketName,
+      description: 'S3 bucket for post media — set as S3_BUCKET_NAME env var in post-service',
     });
   }
 }

@@ -13,6 +13,7 @@ abstract class PostRemoteDatasource {
     required String content,
     List<String> mediaUrls,
   });
+  Future<String> uploadMedia(String filePath);
   Future<void> likePost(String postId, int userId);
   Future<void> commentPost(
       String postId, int userId, String username, String text);
@@ -48,6 +49,19 @@ class PostRemoteDatasourceImpl implements PostRemoteDatasource {
         'mediaUrls': mediaUrls,
       });
       return PostModel.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      _handleError(e);
+    }
+  }
+
+  @override
+  Future<String> uploadMedia(String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+      });
+      final resp = await _dio.post('${ApiConstants.posts}/media', data: formData);
+      return resp.data['url'] as String;
     } on DioException catch (e) {
       _handleError(e);
     }

@@ -13,3 +13,12 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:decp-media-local}
