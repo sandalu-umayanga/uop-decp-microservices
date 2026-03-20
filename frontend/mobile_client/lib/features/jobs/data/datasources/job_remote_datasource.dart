@@ -13,6 +13,7 @@ abstract class JobRemoteDatasource {
   Future<void> applyToJob(int jobId, Map<String, dynamic> data);
   Future<List<JobApplicationModel>> getApplicationsByUser(int userId);
   Future<List<JobApplicationModel>> getApplicationsByJob(int jobId);
+  Future<void> deleteJob(int id);
 }
 
 class JobRemoteDatasourceImpl implements JobRemoteDatasource {
@@ -24,8 +25,12 @@ class JobRemoteDatasourceImpl implements JobRemoteDatasource {
     try {
       final resp = await _dio.get(ApiConstants.jobs);
       final list = resp.data as List;
-      return list.map((e) => JobModel.fromJson(e as Map<String, dynamic>)).toList();
-    } on DioException catch (e) { _handleError(e); }
+      return list
+          .map((e) => JobModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _handleError(e);
+    }
   }
 
   @override
@@ -33,7 +38,9 @@ class JobRemoteDatasourceImpl implements JobRemoteDatasource {
     try {
       final resp = await _dio.get('${ApiConstants.jobs}/$id');
       return JobModel.fromJson(resp.data as Map<String, dynamic>);
-    } on DioException catch (e) { _handleError(e); }
+    } on DioException catch (e) {
+      _handleError(e);
+    }
   }
 
   @override
@@ -41,23 +48,32 @@ class JobRemoteDatasourceImpl implements JobRemoteDatasource {
     try {
       final resp = await _dio.post(ApiConstants.jobs, data: data);
       return JobModel.fromJson(resp.data as Map<String, dynamic>);
-    } on DioException catch (e) { _handleError(e); }
+    } on DioException catch (e) {
+      _handleError(e);
+    }
   }
 
   @override
   Future<void> applyToJob(int jobId, Map<String, dynamic> data) async {
     try {
       await _dio.post('${ApiConstants.jobs}/$jobId/apply', data: data);
-    } on DioException catch (e) { _handleError(e); }
+    } on DioException catch (e) {
+      _handleError(e);
+    }
   }
 
   @override
   Future<List<JobApplicationModel>> getApplicationsByUser(int userId) async {
     try {
-      final resp = await _dio.get('${ApiConstants.jobs}/user/$userId/applications');
+      final resp =
+          await _dio.get('${ApiConstants.jobs}/user/$userId/applications');
       final list = resp.data as List;
-      return list.map((e) => JobApplicationModel.fromJson(e as Map<String, dynamic>)).toList();
-    } on DioException catch (e) { _handleError(e); }
+      return list
+          .map((e) => JobApplicationModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _handleError(e);
+    }
   }
 
   @override
@@ -65,8 +81,21 @@ class JobRemoteDatasourceImpl implements JobRemoteDatasource {
     try {
       final resp = await _dio.get('${ApiConstants.jobs}/$jobId/applications');
       final list = resp.data as List;
-      return list.map((e) => JobApplicationModel.fromJson(e as Map<String, dynamic>)).toList();
-    } on DioException catch (e) { _handleError(e); }
+      return list
+          .map((e) => JobApplicationModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _handleError(e);
+    }
+  }
+
+  @override
+  Future<void> deleteJob(int id) async {
+    try {
+      await _dio.delete('${ApiConstants.jobs}/$id');
+    } on DioException catch (e) {
+      _handleError(e);
+    }
   }
 
   Never _handleError(DioException e) {

@@ -253,37 +253,7 @@ class _ConversationsAppBar extends StatelessWidget
       foregroundColor: Colors.white,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       elevation: 0,
-      title: Row(
-        children: [
-          const Text(
-            'Messages',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: -0.5,
-            ),
-          ),
-          if (totalUnread > 0) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                totalUnread > 99 ? '99+' : '$totalUnread',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
+      title: const Text('Messages'),
       actions: [
         IconButton(
           icon: const Icon(Icons.search_rounded, size: 22),

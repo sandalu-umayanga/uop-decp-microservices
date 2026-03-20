@@ -98,30 +98,7 @@ class _NotificationsScreenState
         backgroundColor: _AppColors.accent,
         foregroundColor: Colors.white,
         elevation: 2,
-        title: Row(
-          children: [
-            const Text('Notifications'),
-            if (unreadCount > 0) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$unreadCount',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+        title: const Text('Notifications'),
         actions: [
           if (hasUnread)
             TextButton(

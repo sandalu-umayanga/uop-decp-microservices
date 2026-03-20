@@ -89,6 +89,19 @@ class JobsNotifier extends Notifier<JobsState> {
       return false;
     }
   }
+
+  Future<bool> deleteJob(int id) async {
+    try {
+      await ref.read(jobDatasourceProvider).deleteJob(id);
+      state = state.copyWith(
+        jobs: state.jobs.where((job) => job.id != id).toList(),
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
 }
 
 final jobsProvider =
