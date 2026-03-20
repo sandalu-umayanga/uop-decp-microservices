@@ -1,5 +1,10 @@
+// LocalDateTime from the backend has no timezone suffix — treat it as UTC.
+function parseUtc(dateStr: string): Date {
+  return new Date(dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : dateStr + "Z");
+}
+
 export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = parseUtc(dateStr);
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -8,7 +13,7 @@ export function formatDate(dateStr: string): string {
 }
 
 export function formatDateTime(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = parseUtc(dateStr);
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -20,7 +25,7 @@ export function formatDateTime(dateStr: string): string {
 
 export function formatRelativeTime(dateStr: string): string {
   const now = Date.now();
-  const then = new Date(dateStr).getTime();
+  const then = parseUtc(dateStr).getTime();
   const diff = now - then;
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
