@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PostSummaryDTO {
     private String postId;
+    private String authorName;
     private Long likes;
     private Long comments;
     private Long views;

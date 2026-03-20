@@ -1,0 +1,20 @@
+Generated: 2026-03-20T11:17:35.7006141+05:30
+LOGIN: OK
+FAIL | /api/analytics/overview | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/users | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/posts | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/jobs | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/events | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/research | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/messages | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/timeline?from=2026-03-01&to=2026-03-20 | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.
+FAIL | /api/analytics/export?format=csv&type=snapshots | status=500
+ERROR | The remote server returned an error: (500) Internal Server Error.

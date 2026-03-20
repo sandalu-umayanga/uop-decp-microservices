@@ -1,15 +1,16 @@
 package com.decp.analytics.repository;
 
-import com.decp.analytics.model.UserMetric;
-import com.decp.analytics.model.UserRole;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.decp.analytics.model.UserMetric;
+import com.decp.analytics.model.UserRole;
 
 @Repository
 public interface UserMetricRepository extends JpaRepository<UserMetric, Long> {
@@ -22,8 +23,8 @@ public interface UserMetricRepository extends JpaRepository<UserMetric, Long> {
 
     Long countByLastActiveAtAfter(LocalDateTime after);
 
-    @Query("SELECT u FROM UserMetric u ORDER BY " +
-           "(u.postsCreated + u.eventsAttended + u.jobsApplied + u.researchUploaded + u.messagesCount) DESC LIMIT 10")
+        @Query("SELECT u FROM UserMetric u ORDER BY " +
+            "(u.postsCreated + u.eventsAttended + u.jobsApplied + u.researchUploaded + u.messagesCount) DESC")
     List<UserMetric> findMostActiveUsers();
 
     @Query("SELECT COUNT(u) FROM UserMetric u WHERE u.lastActiveAt > :since AND u.createdAt < :since")

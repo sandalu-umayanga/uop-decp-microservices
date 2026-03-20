@@ -27,3 +27,12 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+
+analytics:
+  source:
+    user-db-url: ${ANALYTICS_SOURCE_USER_DB_URL:jdbc:postgresql://localhost:5433/decp_user_db}
+    job-db-url: ${ANALYTICS_SOURCE_JOB_DB_URL:jdbc:postgresql://localhost:5433/decp_job_db}
+    event-db-url: ${ANALYTICS_SOURCE_EVENT_DB_URL:jdbc:postgresql://localhost:5433/decp_event_db}
+    research-db-url: ${ANALYTICS_SOURCE_RESEARCH_DB_URL:jdbc:postgresql://localhost:5433/decp_research_db}
+    post-mongo-uri: ${ANALYTICS_SOURCE_POST_MONGO_URI:mongodb://admin:admin1234@localhost:27018/decp_posts?authSource=admin}
+    messaging-mongo-uri: ${ANALYTICS_SOURCE_MESSAGING_MONGO_URI:mongodb://admin:admin1234@localhost:27018/decp_messaging?authSource=admin}

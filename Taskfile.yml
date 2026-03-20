@@ -2,7 +2,7 @@
 version: "3"
 
 vars:
-  JAVA_HOME: C:\Program Files\Eclipse Adoptium\jdk-17.0.17.10-hotspot
+  JAVA_HOME: C:\Program Files\Java\jdk-17
   MVN: mvnw.cmd
   BACKEND_DIR: backend
   FRONTEND_DIR: frontend/web-client

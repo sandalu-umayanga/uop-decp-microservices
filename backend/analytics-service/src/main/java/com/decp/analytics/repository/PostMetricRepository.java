@@ -1,13 +1,17 @@
 package com.decp.analytics.repository;
 
-import com.decp.analytics.model.PostMetric;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
+import org.springframework.stereotype.Repository;
+
+import com.decp.analytics.model.PostMetric;
+
+import jakarta.persistence.QueryHint;
 
 @Repository
 public interface PostMetricRepository extends JpaRepository<PostMetric, Long> {
@@ -16,7 +20,8 @@ public interface PostMetricRepository extends JpaRepository<PostMetric, Long> {
 
     Long countByCreatedAtAfter(LocalDateTime after);
 
-    @Query("SELECT p FROM PostMetric p ORDER BY (p.likes + p.comments + p.views) DESC LIMIT 10")
+    @QueryHints(@QueryHint(name = "jakarta.persistence.query.timeout", value = "3000"))
+    @Query("SELECT p FROM PostMetric p ORDER BY (p.likes + p.comments + p.views) DESC")
     List<PostMetric> findTopPostsByEngagement();
 
     @Query("SELECT COALESCE(AVG(p.likes), 0) FROM PostMetric p")

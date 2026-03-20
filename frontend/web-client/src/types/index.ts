@@ -278,8 +278,17 @@ export interface AnalyticsOverview {
   totalJobs: number;
   totalEvents: number;
   totalResearch: number;
+  activeUsersToday: number;
+  activeUsersThisWeek: number;
+  activeUsersThisMonth: number;
+}
+
+export interface MessageMetrics {
   totalMessages: number;
-  activeUsers: number;
+  messagesThisMonth: number;
+  messagesThisWeek: number;
+  messagesToday: number;
+  activeConversations: number;
 }
 
 export interface UserMetrics {
@@ -324,7 +333,11 @@ export interface TimelineEntry {
 
 // ==================== Mentorship ====================
 export type MentorshipRole = "MENTOR" | "MENTEE" | "BOTH";
-export type Availability = "HIGHLY_AVAILABLE" | "AVAILABLE" | "LIMITED" | "NOT_AVAILABLE";
+export type Availability =
+  | "HIGHLY_AVAILABLE"
+  | "AVAILABLE"
+  | "LIMITED"
+  | "NOT_AVAILABLE";
 export type ProposedDuration =
   | "ONE_MONTH"
   | "THREE_MONTHS"
@@ -337,7 +350,12 @@ export type MentorshipRequestStatus =
   | "CANCELLED";
 export type RelationshipStatus = "ACTIVE" | "PAUSED" | "COMPLETED";
 export type MeetingFrequency = "WEEKLY" | "BIWEEKLY" | "MONTHLY";
-export type PreferredChannel = "EMAIL" | "VIDEO_CALL" | "PHONE" | "IN_PERSON" | "MESSAGING";
+export type PreferredChannel =
+  | "EMAIL"
+  | "VIDEO_CALL"
+  | "PHONE"
+  | "IN_PERSON"
+  | "MESSAGING";
 
 export interface MentorshipProfileResponse {
   id: number;

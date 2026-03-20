@@ -1,13 +1,17 @@
 package com.decp.analytics.cache;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -77,6 +81,15 @@ public class MetricsCache {
         }
     }
 
+    public void upsertJobLeaderboard(String jobId, String title, long applications) {
+        try {
+            redisTemplate.opsForZSet().add(LEADERBOARD_JOBS, jobId, applications);
+            redisTemplate.opsForHash().put(JOB_TITLES, jobId, title != null ? title : "");
+        } catch (Exception e) {
+            log.warn("Redis upsertJobLeaderboard failed: {}", e.getMessage());
+        }
+    }
+
     public List<Map<String, Object>> getTopJobs(int count) {
         try {
             var entries = redisTemplate.opsForZSet().reverseRangeWithScores(LEADERBOARD_JOBS, 0, count - 1L);
@@ -114,6 +127,15 @@ public class MetricsCache {
             redisTemplate.opsForZSet().incrementScore(LEADERBOARD_EVENTS, eventId, 1);
         } catch (Exception e) {
             log.warn("Redis incrementEventRsvps failed: {}", e.getMessage());
+        }
+    }
+
+    public void upsertEventLeaderboard(String eventId, String title, long rsvpCount) {
+        try {
+            redisTemplate.opsForZSet().add(LEADERBOARD_EVENTS, eventId, rsvpCount);
+            redisTemplate.opsForHash().put(EVENT_TITLES, eventId, title != null ? title : "");
+        } catch (Exception e) {
+            log.warn("Redis upsertEventLeaderboard failed: {}", e.getMessage());
         }
     }
 

@@ -1,16 +1,31 @@
 package com.decp.analytics.controller;
 
-import com.decp.analytics.dto.*;
-import com.decp.analytics.service.AnalyticsService;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.decp.analytics.dto.AnalyticsOverviewResponse;
+import com.decp.analytics.dto.EventMetricsResponse;
+import com.decp.analytics.dto.JobMetricsResponse;
+import com.decp.analytics.dto.MessageMetricsResponse;
+import com.decp.analytics.dto.PostMetricsResponse;
+import com.decp.analytics.dto.ResearchMetricsResponse;
+import com.decp.analytics.dto.TimelineEntry;
+import com.decp.analytics.dto.UserMetricsResponse;
+import com.decp.analytics.service.AnalyticsService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/analytics")
@@ -92,6 +107,18 @@ public class AnalyticsController {
                         "attachment; filename=\"analytics-" + type + "-" + LocalDate.now() + ".csv\"")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csv);
+    }
+
+    @PostMapping("/backfill")
+    public ResponseEntity<Map<String, Object>> backfill(
+            @RequestHeader("X-User-Role") String userRole,
+            @RequestParam(defaultValue = "false") boolean force) {
+        validateAdmin(userRole);
+        Map<String, Long> counters = analyticsService.backfillFromSourceDatabases(force);
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "force", force,
+                "counters", counters));
     }
 
     private void validateAdmin(String userRole) {

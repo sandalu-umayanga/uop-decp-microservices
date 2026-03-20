@@ -5,6 +5,7 @@ import type {
   PostMetrics,
   JobMetrics,
   EventMetrics,
+  MessageMetrics,
   TimelineEntry,
 } from "../types";
 
@@ -18,6 +19,8 @@ export const analyticsService = {
   getJobMetrics: () => api.get<JobMetrics>("/api/analytics/jobs"),
 
   getEventMetrics: () => api.get<EventMetrics>("/api/analytics/events"),
+
+  getMessageMetrics: () => api.get<MessageMetrics>("/api/analytics/messages"),
 
   getTimeline: (from: string, to: string) =>
     api.get<TimelineEntry[]>("/api/analytics/timeline", {
