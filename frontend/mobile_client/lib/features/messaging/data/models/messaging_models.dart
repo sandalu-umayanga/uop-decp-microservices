@@ -2,6 +2,8 @@ class ConversationModel {
   final String id;
   final List<int> participants;
   final List<String> participantNames;
+  final String? groupName; 
+  final bool isGroup;
   final String? lastMessage;
   final String? lastMessageAt;
   final String? createdAt;
@@ -11,6 +13,8 @@ class ConversationModel {
     required this.id,
     required this.participants,
     required this.participantNames,
+    this.groupName,
+    this.isGroup = false,
     this.lastMessage,
     this.lastMessageAt,
     this.createdAt,
@@ -25,6 +29,8 @@ class ConversationModel {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      groupName: json['groupName'] as String?, 
+      isGroup: json['group'] as bool? ?? false, 
       lastMessage: json['lastMessage'] as String?,
       lastMessageAt: json['lastMessageAt'] as String?,
       createdAt: json['createdAt'] as String?,

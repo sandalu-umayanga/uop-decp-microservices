@@ -8,12 +8,22 @@ import '../../../auth/data/models/user_model.dart';
 
 abstract class MessagingRemoteDatasource {
   Future<List<ConversationModel>> getConversations();
-  Future<ConversationModel> createConversation(List<int> participantIds,
-      List<String> participantNames, String initialMessage);
   Future<List<MessageModel>> getMessages(String conversationId, {int page = 0, int size = 20});
   Future<void> markRead(String conversationId);
   Future<void> deleteConversation(String conversationId);
   Future<UserModel?> searchUser(String username);
+  Future<ConversationModel> createConversation({
+    required List<int> participantIds,
+    required List<String> participantNames,
+    String? groupName, // Added
+    String? initialMessage,
+  });
+  
+  Future<ConversationModel> addParticipants(
+    String conversationId, 
+    List<int> participantIds, 
+    List<String> participantNames
+  );
 }
 
 class MessagingRemoteDatasourceImpl implements MessagingRemoteDatasource {
@@ -30,14 +40,34 @@ class MessagingRemoteDatasourceImpl implements MessagingRemoteDatasource {
   }
 
   @override
-  Future<ConversationModel> createConversation(List<int> participantIds,
-      List<String> participantNames, String initialMessage) async {
+  Future<ConversationModel> createConversation({
+    required List<int> participantIds,
+    required List<String> participantNames,
+    String? groupName,
+    String? initialMessage,
+  }) async {
     try {
       final resp = await _dio.post(ApiConstants.conversations, data: {
         'participantIds': participantIds,
         'participantNames': participantNames,
+        'groupName': groupName,
         'initialMessage': initialMessage,
       });
+      return ConversationModel.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) { _handleError(e); }
+  }
+
+  @override
+  Future<ConversationModel> addParticipants(
+      String conversationId, List<int> participantIds, List<String> participantNames) async {
+    try {
+      final resp = await _dio.put(
+        '${ApiConstants.conversations}/$conversationId/participants',
+        data: {
+          'participantIds': participantIds,
+          'participantNames': participantNames,
+        },
+      );
       return ConversationModel.fromJson(resp.data as Map<String, dynamic>);
     } on DioException catch (e) { _handleError(e); }
   }
@@ -76,7 +106,7 @@ class MessagingRemoteDatasourceImpl implements MessagingRemoteDatasource {
   Future<UserModel?> searchUser(String username) async {
     try {
       final resp = await _dio.get(
-        ApiConstants.userSearch,
+        ApiConstants.userByUsername,
         queryParameters: {'username': username},
       );
       if (resp.data == null) return null;

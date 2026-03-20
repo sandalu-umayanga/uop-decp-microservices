@@ -19,16 +19,12 @@ class ConversationsState {
 }
 
 class ConversationsNotifier extends Notifier<ConversationsState> {
-
-@override
-  ConversationsState build(){
-    _init();
-    return const ConversationsState();
+  @override
+  ConversationsState build() {
+    // Initial load
+    Future.microtask(() => loadConversations());
+    return const ConversationsState(isLoading: true);
   }
-
-Future<void> _init() async {
-  await loadConversations();
-}
 
   Future<void> loadConversations() async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -40,15 +36,50 @@ Future<void> _init() async {
     }
   }
 
-  Future<ConversationModel?> startConversation(
-      List<int> participantIds, List<String> participantNames, String msg) async {
+  /// Updated to support Group Chats
+  Future<ConversationModel?> startConversation({
+    required List<int> participantIds,
+    required List<String> participantNames,
+    String? groupName, // Added for groups
+    String? msg,
+  }) async {
     try {
-      final conv = await ref.read(messagingDatasourceProvider)
-          .createConversation(participantIds, participantNames, msg);
-      state = state.copyWith(conversations: [conv, ...state.conversations]);
+      final conv = await ref.read(messagingDatasourceProvider).createConversation(
+            participantIds: participantIds,
+            participantNames: participantNames,
+            groupName: groupName,
+            initialMessage: msg,
+          );
+      
+      // Add the new conversation to the top of the list
+      state = state.copyWith(
+        conversations: [conv, ...state.conversations.where((c) => c.id != conv.id)],
+      );
       return conv;
-    } catch (_) {
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
       return null;
+    }
+  }
+
+  /// New: Add participants to an existing group
+  Future<void> addParticipantsToGroup(
+    String conversationId, 
+    List<int> newIds, 
+    List<String> newNames
+  ) async {
+    try {
+      final updatedConv = await ref.read(messagingDatasourceProvider)
+          .addParticipants(conversationId, newIds, newNames);
+      
+      // Update the specific conversation in the state list
+      final newConversations = state.conversations.map((c) {
+        return c.id == conversationId ? updatedConv : c;
+      }).toList();
+      
+      state = state.copyWith(conversations: newConversations);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
     }
   }
 }

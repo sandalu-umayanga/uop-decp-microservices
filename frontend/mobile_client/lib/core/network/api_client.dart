@@ -6,7 +6,7 @@ import '../storage/secure_storage_service.dart';
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://10.0.2.2:8080/api', // Android emulator maps 10.0.2.2 to host machine's localhost
+      baseUrl: 'http://decp-alb-1757727127.ap-south-1.elb.amazonaws.com/api', // Android emulator maps 10.0.2.2 to host machine's localhost
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {

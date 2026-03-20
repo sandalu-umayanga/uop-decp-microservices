@@ -5,8 +5,10 @@ class Job {
   final String company;
   final String location;
   final String type;
-  final int postedBy;
+  final int? postedBy;
   final String posterName;
+  final String status;
+  final int applicationCount;
   final String? createdAt;
   final String? updatedAt;
 
@@ -19,6 +21,8 @@ class Job {
     required this.type,
     required this.postedBy,
     required this.posterName,
+    required this.status,
+    required this.applicationCount,
     this.createdAt,
     this.updatedAt,
   });

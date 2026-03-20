@@ -1,3 +1,5 @@
+import 'package:decp_mobile_app/features/mentorship/data/models/feedback_model.dart';
+import 'package:decp_mobile_app/features/mentorship/data/models/relationship_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
@@ -137,8 +139,8 @@ class MentorshipRemoteDatasourceImpl implements MentorshipRemoteDatasource {
       final resp = await _dio.get('${ApiConstants.mentorship}/requests');
       final list = resp.data as List? ?? [];
       return list
-          .map((e) =>
-              MentorshipRequestModel.fromJson(e as Map<String, dynamic>))
+          .map(
+              (e) => MentorshipRequestModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
       _handleError(e);
@@ -160,6 +162,10 @@ class MentorshipRemoteDatasourceImpl implements MentorshipRemoteDatasource {
     String status, {
     String? rejectionReason,
   }) async {
+    if (status != 'ACCEPTED' && status != 'REJECTED') {
+      throw ArgumentError('Invalid status: $status');
+    }
+
     try {
       await _dio.put(
         '${ApiConstants.mentorship}/request/$id',
@@ -261,8 +267,7 @@ class MentorshipRemoteDatasourceImpl implements MentorshipRemoteDatasource {
         e.type == DioExceptionType.unknown) {
       throw const NetworkException();
     }
-    throw ServerException(
-        e.response?.data?['message']?.toString() ?? 'Error');
+    throw ServerException(e.response?.data?['message']?.toString() ?? 'Error');
   }
 }
 

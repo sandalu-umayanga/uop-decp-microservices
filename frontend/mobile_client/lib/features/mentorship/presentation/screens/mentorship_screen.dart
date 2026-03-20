@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/mentorship_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -6,11 +7,82 @@ import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/error_widget.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../data/models/mentorship_models.dart';
+import '../../data/models/feedback_model.dart';
+import '../../data/models/relationship_model.dart';
 
-// ─────────────────────────────────────────────
-// Root screen
-// ─────────────────────────────────────────────
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+class _C {
+  static const accent      = Color(0xFF1565C0);
+  static const accentLight = Color(0xFFE3F2FD);
+  static const accentMid   = Color(0xFF1976D2);
+  static const surface     = Color(0xFFFFFFFF);
+  static const surfaceAlt  = Color(0xFFF4F7FB);
+  static const border      = Color(0xFFE2E8F0);
+  static const borderSoft  = Color(0xFFEEF2F7);
+  static const text        = Color(0xFF0F172A);
+  static const textSec     = Color(0xFF475569);
+  static const textMuted   = Color(0xFF94A3B8);
+  static const teal        = Color(0xFF00897B);
+  static const tealLight   = Color(0xFFE0F2F1);
+  static const green       = Color(0xFF2E7D32);
+  static const greenLight  = Color(0xFFE8F5E9);
+  static const amber       = Color(0xFFF59E0B);
+  static const orange      = Color(0xFFF57C00);
+  static const orangeLight = Color(0xFFFFF3E0);
+  static const error       = Color(0xFFEF4444);
+  static const errorLight  = Color(0xFFFEF2F2);
+  static const grey        = Color(0xFF9E9E9E);
+}
 
+Color _avatarColor(String name) {
+  const p = [
+    Color(0xFF1565C0), Color(0xFF6A1B9A), Color(0xFF0277BD),
+    Color(0xFF00838F), Color(0xFFF57C00), Color(0xFFAD1457),
+  ];
+  if (name.isEmpty) return p[0];
+  return p[name.codeUnitAt(0) % p.length];
+}
+
+String _initial(String name) => name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+// Availability
+Color _availColor(String a) => switch (a) {
+      'HIGHLY_AVAILABLE' => _C.green,
+      'AVAILABLE'        => _C.teal,
+      'LIMITED'          => _C.orange,
+      _                  => _C.error,
+    };
+
+Color _availLight(String a) => switch (a) {
+      'HIGHLY_AVAILABLE' => _C.greenLight,
+      'AVAILABLE'        => _C.tealLight,
+      'LIMITED'          => _C.orangeLight,
+      _                  => _C.errorLight,
+    };
+
+String _availLabel(String a) =>
+    a.replaceAll('_', ' ').split(' ')
+        .map((w) => w.isEmpty ? '' : '${w[0]}${w.substring(1).toLowerCase()}')
+        .join(' ');
+
+// Request / relationship status
+Color _statusColor(String s) => switch (s) {
+      'PENDING'   || 'PAUSED'    => _C.orange,
+      'ACCEPTED'  || 'ACTIVE'    => _C.green,
+      'COMPLETED'                => _C.accent,
+      'REJECTED'  || 'CANCELLED' => _C.error,
+      _                          => _C.grey,
+    };
+
+Color _statusLight(String s) => switch (s) {
+      'PENDING'   || 'PAUSED'    => _C.orangeLight,
+      'ACCEPTED'  || 'ACTIVE'    => _C.greenLight,
+      'COMPLETED'                => _C.accentLight,
+      'REJECTED'  || 'CANCELLED' => _C.errorLight,
+      _                          => const Color(0xFFF5F5F5),
+    };
+
+// ─── Root Screen ──────────────────────────────────────────────────────────────
 class MentorshipScreen extends ConsumerStatefulWidget {
   const MentorshipScreen({super.key});
 
@@ -19,20 +91,38 @@ class MentorshipScreen extends ConsumerStatefulWidget {
 }
 
 class _MentorshipScreenState extends ConsumerState<MentorshipScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabCtrl;
+  late final AnimationController _fabCtrl;
+  late final Animation<double>   _fabAnim;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
-    Future.microtask(() => ref.read(mentorshipProvider.notifier).loadAll());
+    _fabCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+    _fabAnim = CurvedAnimation(parent: _fabCtrl, curve: Curves.elasticOut);
+    Future.microtask(() {
+      ref.read(mentorshipProvider.notifier).loadAll();
+      _fabCtrl.forward();
+    });
   }
 
   @override
   void dispose() {
     _tabCtrl.dispose();
+    _fabCtrl.dispose();
     super.dispose();
+  }
+
+  void _showEditProfile(MentorshipProfileModel? existing) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditProfileSheet(existing: existing),
+    );
   }
 
   @override
@@ -40,46 +130,72 @@ class _MentorshipScreenState extends ConsumerState<MentorshipScreen>
     final state = ref.watch(mentorshipProvider);
 
     MentorshipData? data;
-    state.when(
-      data: (d) => data = d,
-      loading: () {},
-      error: (_, __) {},
-    );
+    state.whenData((d) => data = d);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showEditProfileSheet(context, data?.profile),
-        tooltip: 'Edit my profile',
-        child: const Icon(Icons.manage_accounts_outlined),
+      backgroundColor: _C.surfaceAlt,
+      floatingActionButton: ScaleTransition(
+        scale: _fabAnim,
+        child: FloatingActionButton(
+          onPressed: () => _showEditProfile(data?.profile),
+          backgroundColor: _C.accent,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          tooltip: 'Edit my profile',
+          child: const Icon(Icons.manage_accounts_rounded, size: 22),
+        ),
       ),
       body: Builder(builder: (_) {
         if (state.isLoading) {
-          return const AppLoadingWidget(message: 'Loading mentorship...');
+          return const AppLoadingWidget(message: 'Loading mentorship…');
         }
         if (state.hasError && data == null) {
           return AppErrorWidget(
             message: state.error.toString(),
-            onRetry: () => ref.read(mentorshipProvider.notifier).loadAll(),
+            onRetry: () =>
+                ref.read(mentorshipProvider.notifier).loadAll(),
           );
         }
 
         return Column(
           children: [
+            // Profile banner
             if (data?.profile != null)
               _ProfileBanner(profile: data!.profile!),
-            TabBar(
-              controller: _tabCtrl,
-              tabs: const [
-                Tab(text: 'Discover'),
-                Tab(text: 'Requests'),
-                Tab(text: 'Active'),
-              ],
+
+            // Tab bar
+            Container(
+              color: _C.surface,
+              child: TabBar(
+                controller: _tabCtrl,
+                indicatorColor: _C.accent,
+                indicatorWeight: 2.5,
+                labelColor: _C.accent,
+                unselectedLabelColor: _C.textMuted,
+                labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    letterSpacing: 0.2),
+                unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500, fontSize: 13),
+                tabs: [
+                  Tab(text: 'Discover (${data?.matches.length ?? 0})'),
+                  Tab(text: 'Requests (${data?.requests.length ?? 0})'),
+                  Tab(text: 'Active (${data?.relationships.length ?? 0})'),
+                ],
+              ),
             ),
+
             Expanded(
               child: TabBarView(
                 controller: _tabCtrl,
                 children: [
-                  _DiscoverTab(matches: data?.matches ?? []),
+                  _DiscoverTab(
+                    matches: data?.matches ?? [],
+                    isStudent: ref.watch(currentUserProvider)?.role == 'STUDENT',
+                  ),
                   _RequestsTab(requests: data?.requests ?? []),
                   _ActiveTab(relationships: data?.relationships ?? []),
                 ],
@@ -90,42 +206,46 @@ class _MentorshipScreenState extends ConsumerState<MentorshipScreen>
       }),
     );
   }
-
-  void _showEditProfileSheet(
-      BuildContext context, MentorshipProfileModel? existing) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _EditProfileSheet(existing: existing),
-    );
-  }
 }
 
-// ─────────────────────────────────────────────
-// Profile banner
-// ─────────────────────────────────────────────
-
+// ─── Profile Banner ───────────────────────────────────────────────────────────
 class _ProfileBanner extends StatelessWidget {
   final MentorshipProfileModel profile;
   const _ProfileBanner({required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        profile.role == 'MENTOR' ? const Color(0xFF1565C0) : const Color(0xFF00897B);
+    final isMentor = profile.role == 'MENTOR';
+    final color    = isMentor ? _C.accent : _C.teal;
+    final light    = isMentor ? _C.accentLight : _C.tealLight;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: color.withValues(alpha: 0.08),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.07),
+            blurRadius: 10, offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: color.withValues(alpha: 0.18),
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+                color: light,
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: color.withOpacity(0.25), width: 1.5)),
             child: Icon(
-              profile.role == 'MENTOR' ? Icons.school : Icons.person,
-              color: color,
-              size: 20,
+              isMentor ? Icons.school_rounded : Icons.person_rounded,
+              color: color, size: 20,
             ),
           ),
           const SizedBox(width: 12),
@@ -135,346 +255,689 @@ class _ProfileBanner extends StatelessWidget {
               children: [
                 Text(
                   'You are a ${profile.role}',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: color,
+                    letterSpacing: -0.1,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  '${profile.department} · ${profile.yearsOfExperience} yrs exp',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  '${profile.department} · ${profile.yearsOfExperience} yr${profile.yearsOfExperience != 1 ? 's' : ''} exp',
+                  style: const TextStyle(
+                      fontSize: 12, color: _C.textMuted),
                 ),
               ],
             ),
           ),
-          _AvailabilityChip(availability: profile.availability),
+          _AvailChip(availability: profile.availability),
         ],
       ),
     );
   }
 }
 
-class _AvailabilityChip extends StatelessWidget {
+class _AvailChip extends StatelessWidget {
   final String availability;
-  const _AvailabilityChip({required this.availability});
+  const _AvailChip({required this.availability});
 
   @override
   Widget build(BuildContext context) {
-    final colors = {
-      'HIGHLY_AVAILABLE': Colors.green,
-      'AVAILABLE': Colors.teal,
-      'LIMITED': Colors.orange,
-      'NOT_AVAILABLE': Colors.red,
-    };
-    final c = colors[availability] ?? Colors.grey;
+    final c = _availColor(availability);
+    final l = _availLight(availability);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        color: l,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: c.withOpacity(0.3)),
       ),
       child: Text(
-        availability.replaceAll('_', ' '),
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: c),
+        _availLabel(availability),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: c,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────
-// Discover tab
-// ─────────────────────────────────────────────
-
+// ─── Discover Tab ─────────────────────────────────────────────────────────────
 class _DiscoverTab extends ConsumerStatefulWidget {
   final List<MatchModel> matches;
-  const _DiscoverTab({required this.matches});
+  final bool isStudent; // true = STUDENT, false = ALUMNI/ADMIN
+  const _DiscoverTab({required this.matches, required this.isStudent});
 
   @override
   ConsumerState<_DiscoverTab> createState() => _DiscoverTabState();
 }
 
 class _DiscoverTabState extends ConsumerState<_DiscoverTab> {
-  String? _filterExpertise;
+  final _searchCtrl = TextEditingController();
   String? _filterAvailability;
-  final _expertiseCtrl = TextEditingController();
 
-  static const _availabilityOptions = [
-    'HIGHLY_AVAILABLE',
-    'AVAILABLE',
-    'LIMITED',
+  static const _availOptions = [
+    'HIGHLY_AVAILABLE', 'AVAILABLE', 'LIMITED',
   ];
 
   @override
   void dispose() {
-    _expertiseCtrl.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
-  void _applyFilters() {
+  void _search() {
+    final q = _searchCtrl.text.trim();
     ref.read(mentorshipProvider.notifier).loadMatches(
-          expertise: _filterExpertise,
-          availability: _filterAvailability,
-        );
+      expertise: q.isEmpty ? null : q,
+      availability: _filterAvailability,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.matches.isEmpty) {
-      return const Center(child: Text('No recommendations yet.'));
-    }
-
     return Column(
       children: [
-        // ── Filter bar ──────────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        // Filter bar
+        Container(
+          color: _C.surface,
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
           child: Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: _expertiseCtrl,
-                  decoration: const InputDecoration(
-                    hintText: 'Filter by expertise…',
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.search, size: 18),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: _C.surfaceAlt,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: _C.border),
                   ),
-                  onSubmitted: (v) {
-                    setState(() =>
-                        _filterExpertise = v.trim().isEmpty ? null : v.trim());
-                    _applyFilters();
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              DropdownButton<String?>(
-                value: _filterAvailability,
-                hint: const Text('Any'),
-                underline: const SizedBox(),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('Any')),
-                  ..._availabilityOptions.map(
-                    (a) => DropdownMenuItem(
-                      value: a,
-                      child: Text(
-                        a.replaceAll('_', ' '),
-                        style: const TextStyle(fontSize: 13),
-                      ),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onSubmitted: (_) => _search(),
+                    onChanged: (_) => setState(() {}),
+                    style: const TextStyle(
+                        fontSize: 14, color: _C.text),
+                    decoration: InputDecoration(
+                      hintText: 'Search by expertise…',
+                      hintStyle: const TextStyle(
+                          color: _C.textMuted, fontSize: 14),
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: _C.textMuted, size: 19),
+                      suffixIcon: _searchCtrl.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.close_rounded,
+                                  size: 17, color: _C.textMuted),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                setState(() {});
+                                ref.read(mentorshipProvider.notifier)
+                                    .loadMatches(
+                                        availability: _filterAvailability);
+                              },
+                            )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      border: InputBorder.none,
                     ),
                   ),
-                ],
-                onChanged: (v) {
-                  setState(() => _filterAvailability = v);
-                  _applyFilters();
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Availability filter
+              _FilterButton(
+                active: _filterAvailability != null,
+                onTap: () async {
+                  final picked =
+                      await showModalBottomSheet<String?>(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => _AvailPickerSheet(
+                        selected: _filterAvailability,
+                        options: _availOptions),
+                  );
+                  if (picked != null) {
+                    setState(() => _filterAvailability =
+                        picked == '__clear__' ? null : picked);
+                    _search();
+                  }
                 },
               ),
             ],
           ),
         ),
-        // ── Match list ──────────────────────────────────────────────────────
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () =>
-                ref.read(mentorshipProvider.notifier).loadAll(),
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 80),
-              itemCount: widget.matches.length,
-              itemBuilder: (_, i) => _MatchCard(match: widget.matches[i]),
+
+        // Active filter chip
+        if (_filterAvailability != null)
+          Container(
+            color: _C.surface,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: _availLight(_filterAvailability!),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: _availColor(_filterAvailability!)
+                            .withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _availLabel(_filterAvailability!),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: _availColor(_filterAvailability!),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() => _filterAvailability = null);
+                          _search();
+                        },
+                        child: Icon(Icons.close_rounded,
+                            size: 13,
+                            color: _availColor(_filterAvailability!)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
+
+        // Match list
+        Expanded(
+          child: widget.matches.isEmpty
+              ? _EmptyTab(
+                  icon: Icons.people_alt_rounded,
+                  title: 'No matches yet',
+                  subtitle: widget.isStudent
+                      ? 'Try adjusting your filters'
+                      : 'Matches appear as students enrol',
+                )
+              : RefreshIndicator(
+                  color: _C.accent,
+                  backgroundColor: _C.surface,
+                  onRefresh: () =>
+                      ref.read(mentorshipProvider.notifier).loadAll(),
+                  child: ListView.builder(
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                    itemCount: widget.matches.length,
+                    itemBuilder: (_, i) => _MatchCard(
+                        match: widget.matches[i],
+                        index: i,
+                        isStudent: widget.isStudent),
+                  ),
+                ),
         ),
       ],
     );
   }
 }
 
-// ─────────────────────────────────────────────
-// Match card
-// ─────────────────────────────────────────────
-
-class _MatchCard extends ConsumerWidget {
-  final MatchModel match;
-  const _MatchCard({required this.match});
+class _FilterButton extends StatelessWidget {
+  final bool active;
+  final VoidCallback onTap;
+  const _FilterButton({required this.active, required this.onTap});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showRequestDialog(context, ref),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor:
-                        const Color(0xFF1565C0).withValues(alpha: 0.15),
-                    child: Text(
-                      match.userName.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(color: Color(0xFF1565C0)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(match.userName,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        Text(
-                          match.profile.department,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  _CompatibilityRing(score: match.compatibilityScore),
-                ],
-              ),
-              if (match.commonInterests.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: match.commonInterests
-                      .map((i) => Chip(
-                            label: Text(i,
-                                style: const TextStyle(fontSize: 11)),
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ))
-                      .toList(),
-                ),
-              ],
-            ],
-          ),
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 46, height: 46,
+        decoration: BoxDecoration(
+          color: active ? _C.accent : _C.surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: active ? _C.accent : _C.border),
         ),
+        child: Icon(Icons.filter_list_rounded,
+            size: 20,
+            color: active ? Colors.white : _C.textMuted),
       ),
     );
   }
+}
 
-  Future<void> _showRequestDialog(BuildContext context, WidgetRef ref) async {
-    final messageCtrl =
-        TextEditingController(text: 'Hi, I would love to connect!');
-    final topicsCtrl = TextEditingController();
-    String duration = 'THREE_MONTHS';
+class _AvailPickerSheet extends StatelessWidget {
+  final String? selected;
+  final List<String> options;
+  const _AvailPickerSheet(
+      {required this.selected, required this.options});
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlg) => AlertDialog(
-          title: Text('Connect with ${match.userName}'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: messageCtrl,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Message',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: topicsCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Topics (comma-separated)',
-                    hintText: 'Machine Learning, Career Guidance',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: duration,
-                  decoration: const InputDecoration(
-                    labelText: 'Proposed Duration',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                        value: 'ONE_MONTH', child: Text('1 Month')),
-                    DropdownMenuItem(
-                        value: 'THREE_MONTHS', child: Text('3 Months')),
-                    DropdownMenuItem(
-                        value: 'SIX_MONTHS', child: Text('6 Months')),
-                    DropdownMenuItem(
-                        value: 'ONE_YEAR', child: Text('1 Year')),
-                  ],
-                  onChanged: (v) => setDlg(() => duration = v ?? duration),
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                  color: _C.border,
+                  borderRadius: BorderRadius.circular(2)),
             ),
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel')),
-            ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Send')),
+          const Text('Filter by Availability',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: _C.text,
+                letterSpacing: -0.3,
+              )),
+          const SizedBox(height: 14),
+          _PickerOption(
+            label: 'Any Availability',
+            icon: Icons.all_inclusive_rounded,
+            color: _C.accent,
+            light: _C.accentLight,
+            isSelected: selected == null,
+            onTap: () => Navigator.pop(context, '__clear__'),
+          ),
+          const SizedBox(height: 8),
+          ...options.map((o) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _PickerOption(
+                  label: _availLabel(o),
+                  icon: Icons.circle_rounded,
+                  color: _availColor(o),
+                  light: _availLight(o),
+                  isSelected: selected == o,
+                  onTap: () => Navigator.pop(context, o),
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+class _PickerOption extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color light;
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _PickerOption({
+    required this.label, required this.icon,
+    required this.color, required this.light,
+    required this.isSelected, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(0.07)
+              : _C.surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? color.withOpacity(0.4)
+                : _C.border,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                  color: light,
+                  borderRadius: BorderRadius.circular(9)),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color:
+                        isSelected ? color : _C.text,
+                  )),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded,
+                  size: 18, color: color),
           ],
         ),
       ),
     );
-
-    if (confirmed == true && context.mounted) {
-      final topics = topicsCtrl.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-
-      final ok = await ref.read(mentorshipProvider.notifier).requestMentor(
-            mentorId: match.userId,
-            message: messageCtrl.text.trim(),
-            topics: topics,
-            proposedDuration: duration,
-          );
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(ok ? 'Request sent!' : 'Failed to send request.'),
-          backgroundColor: ok ? Colors.green : Colors.red,
-        ));
-      }
-    }
   }
 }
 
-class _CompatibilityRing extends StatelessWidget {
-  final double score;
-  const _CompatibilityRing({required this.score});
+// ─── Match Card ───────────────────────────────────────────────────────────────
+class _MatchCard extends ConsumerStatefulWidget {
+  final MatchModel match;
+  final int index;
+  final bool isStudent;
+  const _MatchCard({required this.match, required this.index, required this.isStudent});
+
+  @override
+  ConsumerState<_MatchCard> createState() => _MatchCardState();
+}
+
+class _MatchCardState extends ConsumerState<_MatchCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double>   _fade;
+  late final Animation<Offset>   _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this,
+        duration: Duration(
+            milliseconds: 360 + (widget.index * 50).clamp(0, 350)));
+    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+            begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    Future.delayed(Duration(milliseconds: widget.index * 50),
+        () { if (mounted) _ctrl.forward(); });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pct = (score * 100).toInt();
-    final color = score >= 0.75
-        ? const Color(0xFF2E7D32)
-        : score >= 0.5
-            ? const Color(0xFF00897B)
-            : Colors.orange;
+    final m     = widget.match;
+    final color = _avatarColor(m.userName);
+    final score = m.compatibilityScore;
+
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            color: _C.surface,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: widget.isStudent
+                  ? () => _showRequestSheet(context, ref)
+                  : null,
+              splashColor: _C.accentLight,
+              highlightColor: _C.accentLight.withOpacity(0.5),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _C.borderSoft),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 48, height: 48,
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              _initial(m.userName),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(m.userName,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: _C.text,
+                                    letterSpacing: -0.2,
+                                  )),
+                              const SizedBox(height: 2),
+                              Text(m.profile.department,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: _C.textMuted)),
+                              const SizedBox(height: 4),
+                              _AvailChip(
+                                  availability: m.profile.availability),
+                            ],
+                          ),
+                        ),
+                        // Compatibility ring
+                        _CompatRing(score: score),
+                      ],
+                    ),
+
+                    // Common interests
+                    if (m.commonInterests.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      const Divider(
+                          height: 1, color: _C.borderSoft),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: m.commonInterests
+                            .map((i) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _C.surfaceAlt,
+                                    borderRadius:
+                                        BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: _C.border),
+                                  ),
+                                  child: Text(i,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: _C.textSec,
+                                      )),
+                                ))
+                            .toList(),
+                      ),
+                    ],
+
+                    // Expertise chips
+                    if (m.profile.expertise.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: m.profile.expertise
+                            .take(4)
+                            .map((e) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        color.withOpacity(0.08),
+                                    borderRadius:
+                                        BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: color
+                                            .withOpacity(0.2)),
+                                  ),
+                                  child: Text(e,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: color,
+                                      )),
+                                ))
+                            .toList(),
+                      ),
+                    ],
+
+                    const SizedBox(height: 12),
+                    // ── Role-aware action ──────────────────────────────────
+                    if (widget.isStudent)
+                      // STUDENT → send a mentorship request
+                      SizedBox(
+                        width: double.infinity,
+                        height: 40,
+                        child: ElevatedButton.icon(
+                          onPressed: () =>
+                              _showRequestSheet(context, ref),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _C.accent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(
+                              Icons.handshake_rounded, size: 16),
+                          label: const Text('Connect',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13)),
+                        ),
+                      )
+                    else
+                      // ALUMNI/ADMIN → requests come TO them; Discover is
+                      // read-only. Show a nudge toward the Requests tab.
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _C.accentLight,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: _C.accent.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.info_outline_rounded,
+                                size: 14,
+                                color: _C.accent.withOpacity(0.8)),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Students send requests to you',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _C.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRequestSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SendRequestSheet(match: widget.match),
+    );
+  }
+}
+
+class _CompatRing extends StatelessWidget {
+  final double score;
+  const _CompatRing({required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct   = (score * 100).toInt();
+    final color = score >= 0.75 ? _C.green : score >= 0.5 ? _C.teal : _C.orange;
     return SizedBox(
-      width: 44,
-      height: 44,
+      width: 52, height: 52,
       child: Stack(
         fit: StackFit.expand,
         children: [
           CircularProgressIndicator(
             value: score,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: _C.border,
             valueColor: AlwaysStoppedAnimation(color),
             strokeWidth: 4,
           ),
           Center(
-            child: Text(
-              '$pct',
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: color),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$pct',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    height: 1,
+                  ),
+                ),
+                Text('%',
+                    style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w600,
+                        color: color)),
+              ],
             ),
           ),
         ],
@@ -483,10 +946,255 @@ class _CompatibilityRing extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// Requests tab
-// ─────────────────────────────────────────────
+// ─── Send Request Sheet ───────────────────────────────────────────────────────
+class _SendRequestSheet extends ConsumerStatefulWidget {
+  final MatchModel match;
+  const _SendRequestSheet({required this.match});
 
+  @override
+  ConsumerState<_SendRequestSheet> createState() =>
+      _SendRequestSheetState();
+}
+
+class _SendRequestSheetState extends ConsumerState<_SendRequestSheet> {
+  final _msgCtrl    = TextEditingController(
+      text: 'Hi, I would love to connect!');
+  final _topicsCtrl = TextEditingController();
+  String _duration  = 'THREE_MONTHS';
+  bool   _sending   = false;
+
+  static const _durations = {
+    'ONE_MONTH':    '1 Month',
+    'THREE_MONTHS': '3 Months',
+    'SIX_MONTHS':   '6 Months',
+    'ONE_YEAR':     '1 Year',
+  };
+
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    _topicsCtrl.dispose();
+    super.dispose();
+  }
+
+  InputDecoration _deco(String label, String hint, {Widget? prefix}) =>
+      InputDecoration(
+        labelText: label,
+        hintText: hint,
+        labelStyle: const TextStyle(fontSize: 13, color: _C.textSec),
+        hintStyle: const TextStyle(fontSize: 14, color: _C.textMuted),
+        prefixIcon: prefix,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true,
+        fillColor: _C.surfaceAlt,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.accent, width: 1.5)),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final m = widget.match;
+    final color = _avatarColor(m.userName);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          20, 0, 20,
+          MediaQuery.of(context).viewInsets.bottom + 28),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                    color: _C.border,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(_initial(m.userName),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        )),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Connect with ${m.userName}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: _C.text,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      Text(m.profile.department,
+                          style: const TextStyle(
+                              fontSize: 12, color: _C.textMuted)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            TextField(
+              controller: _msgCtrl,
+              maxLines: 3, minLines: 2,
+              style: const TextStyle(fontSize: 14, color: _C.text),
+              decoration: _deco('Message',
+                  'Introduce yourself…',
+                  prefix: const Padding(
+                    padding: EdgeInsets.only(bottom: 36),
+                    child: Icon(Icons.message_rounded,
+                        size: 18, color: _C.textMuted),
+                  )),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: _topicsCtrl,
+              style: const TextStyle(fontSize: 14, color: _C.text),
+              decoration: _deco(
+                'Topics (comma-separated)',
+                'e.g. Machine Learning, Career Guidance',
+                prefix: const Icon(Icons.topic_rounded,
+                    size: 18, color: _C.textMuted),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Duration chips
+            const Text('Proposed Duration',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _C.textSec,
+                  letterSpacing: 0.3,
+                )),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _durations.entries.map((e) {
+                final sel = _duration == e.key;
+                return GestureDetector(
+                  onTap: () => setState(() => _duration = e.key),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: sel ? _C.accent : _C.surfaceAlt,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: sel
+                              ? _C.accent
+                              : _C.border),
+                    ),
+                    child: Text(e.value,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: sel
+                              ? Colors.white
+                              : _C.textSec,
+                        )),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: _sending ? null : () async {
+                  setState(() => _sending = true);
+                  final topics = _topicsCtrl.text
+                      .split(',')
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList();
+                  final ok = await ref
+                      .read(mentorshipProvider.notifier)
+                      .requestMentor(
+                        mentorId: m.userId,
+                        message: _msgCtrl.text.trim(),
+                        topics: topics,
+                        proposedDuration: _duration,
+                      );
+                  if (!mounted) return;
+                  setState(() => _sending = false);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(ok
+                        ? 'Request sent to ${m.userName}!'
+                        : 'Failed to send request.'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: ok ? _C.green : _C.error,
+                  ));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _C.accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: _C.accent.withOpacity(0.4),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: _sending
+                    ? const SizedBox(
+                        width: 18, height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.send_rounded, size: 18),
+                label: Text(
+                  _sending ? 'Sending…' : 'Send Request',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Requests Tab ─────────────────────────────────────────────────────────────
 class _RequestsTab extends ConsumerWidget {
   final List<MentorshipRequestModel> requests;
   const _RequestsTab({required this.requests});
@@ -494,145 +1202,316 @@ class _RequestsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (requests.isEmpty) {
-      return const Center(child: Text('No pending requests.'));
+      return const _EmptyTab(
+        icon: Icons.inbox_rounded,
+        title: 'No pending requests',
+        subtitle: 'Sent and received requests will appear here',
+      );
     }
-
     final currentUser = ref.watch(currentUserProvider);
-
+    // ALUMNI/ADMIN are mentors — they *receive* requests.
+    // STUDENT is a mentee — they *send* requests.
+    final isAlumni = currentUser?.role == 'ALUMNI' ||
+        currentUser?.role == 'ADMIN';
     return RefreshIndicator(
+      color: _C.accent,
+      backgroundColor: _C.surface,
       onRefresh: () => ref.read(mentorshipProvider.notifier).loadAll(),
       child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 80),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
         itemCount: requests.length,
         itemBuilder: (_, i) {
           final req = requests[i];
-          final isReceived = req.menteeName != currentUser?.username;
-          return _RequestCard(req: req, isReceived: isReceived);
+          // A request is "received" when the current user is the mentor.
+          final isReceived = isAlumni &&
+              req.mentorId == currentUser?.id;
+          return _RequestCard(req: req, isReceived: isReceived, index: i);
         },
       ),
     );
   }
 }
 
-class _RequestCard extends ConsumerWidget {
+class _RequestCard extends ConsumerStatefulWidget {
   final MentorshipRequestModel req;
   final bool isReceived;
-  const _RequestCard({required this.req, required this.isReceived});
+  final int index;
+  const _RequestCard({
+    required this.req,
+    required this.isReceived,
+    required this.index,
+  });
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'PENDING':   return Colors.orange;
-      case 'ACCEPTED':  return Colors.green;
-      case 'REJECTED':  return Colors.red;
-      case 'CANCELLED': return Colors.grey;
-      default:          return Colors.grey;
-    }
+  @override
+  ConsumerState<_RequestCard> createState() => _RequestCardState();
+}
+
+class _RequestCardState extends ConsumerState<_RequestCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double>   _fade;
+  late final Animation<Offset>   _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this,
+        duration: Duration(
+            milliseconds: 360 + (widget.index * 50).clamp(0, 350)));
+    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+            begin: const Offset(0, 0.07), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    Future.delayed(Duration(milliseconds: widget.index * 50),
+        () { if (mounted) _ctrl.forward(); });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ────────────────────────────────────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    isReceived
-                        ? 'From: ${req.menteeName}'
-                        : 'To: ${req.mentorName}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    final req         = widget.req;
+    final statusColor = _statusColor(req.status);
+    final statusLight = _statusLight(req.status);
+    // When received: the other party is the mentee (student who sent it).
+    // When sent:     the other party is the mentor (alumni we requested).
+    final otherName   = widget.isReceived
+        ? req.menteeUserName
+        : req.mentorUserName;
+    final color       = _avatarColor(otherName);
+
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: widget.isReceived && req.status == 'PENDING'
+                    ? _C.accent.withOpacity(0.3)
+                    : _C.borderSoft,
+                width: widget.isReceived && req.status == 'PENDING'
+                    ? 1.5
+                    : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6, offset: const Offset(0, 2),
                 ),
+              ],
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      width: 42, height: 42,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(_initial(otherName),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                        // isReceived = current user is the mentor,
+                        // so the other party is the mentee.
+                        widget.isReceived
+                            ? 'From ${req.menteeUserName}'
+                            : 'To ${req.mentorUserName}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _C.text,
+                              letterSpacing: -0.1,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              const Icon(Icons.schedule_rounded,
+                                  size: 11,
+                                  color: _C.textMuted),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${req.proposedDuration.replaceAll('_', ' ')} · ${timeAgo(req.createdAt)}',
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: _C.textMuted),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusLight,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color:
+                                statusColor.withOpacity(0.25)),
+                      ),
+                      child: Text(req.status,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: statusColor,
+                            letterSpacing: 0.2,
+                          )),
+                    ),
+                  ],
+                ),
+
+                // Message
+                const SizedBox(height: 10),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _statusColor(req.status).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    color: _C.surfaceAlt,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _C.border),
                   ),
                   child: Text(
-                    req.status,
-                    style: TextStyle(
-                      color: _statusColor(req.status),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    '"${req.message}"',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: _C.textSec,
+                      height: 1.4,
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // ── Message ───────────────────────────────────────────────────
-            Text(
-              '"${req.message}"',
-              style: const TextStyle(fontStyle: FontStyle.italic),
-            ),
-            // ── Topics ────────────────────────────────────────────────────
-            if (req.topics.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: req.topics
-                    .map((t) => Chip(
-                          label: Text(t,
-                              style: const TextStyle(fontSize: 11)),
-                          padding: EdgeInsets.zero,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ))
-                    .toList(),
-              ),
-            ],
-            // ── Duration + date ───────────────────────────────────────────
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.schedule_outlined,
-                    size: 14, color: Color(0xFF9E9E9E)),
-                const SizedBox(width: 4),
-                Text(
-                  '${req.proposedDuration.replaceAll('_', ' ')} · ${timeAgo(req.createdAt)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-            // ── Rejection reason ──────────────────────────────────────────
-            if (req.status == 'REJECTED' &&
-                req.rejectionReason != null &&
-                req.rejectionReason!.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                'Reason: ${req.rejectionReason}',
-                style: const TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ],
-            // ── Accept / Decline ──────────────────────────────────────────
-            if (isReceived && req.status == 'PENDING') ...[
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => _reject(context, ref),
-                    child: const Text('Decline',
-                        style: TextStyle(color: Colors.red)),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _accept(context, ref),
-                    child: const Text('Accept'),
+
+                // Topics
+                if (req.topics.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: req.topics
+                        .map((t) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: _C.surfaceAlt,
+                                borderRadius:
+                                    BorderRadius.circular(20),
+                                border: Border.all(
+                                    color: _C.border),
+                              ),
+                              child: Text(t,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: _C.textSec,
+                                  )),
+                            ))
+                        .toList(),
                   ),
                 ],
-              ),
-            ],
-          ],
+
+                // Rejection reason
+                if (req.status == 'REJECTED' &&
+                    req.rejectionReason != null &&
+                    req.rejectionReason!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _C.errorLight,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: _C.error.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded,
+                            size: 14, color: _C.error),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(req.rejectionReason!,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: _C.error)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Accept / Decline
+                if (widget.isReceived && req.status == 'PENDING') ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () =>
+                              _reject(context, ref),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _C.error,
+                            side: BorderSide(
+                                color: _C.error
+                                    .withOpacity(0.4)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Decline',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              _accept(context, ref),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _C.green,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Accept',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -641,11 +1520,12 @@ class _RequestCard extends ConsumerWidget {
   Future<void> _accept(BuildContext context, WidgetRef ref) async {
     final ok = await ref
         .read(mentorshipProvider.notifier)
-        .respondRequest(req.id, 'ACCEPTED');
+        .respondRequest(widget.req.id, 'ACCEPTED');
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ok ? 'Request accepted.' : 'Failed to accept.'),
-        backgroundColor: ok ? Colors.green : Colors.red,
+        content: Text(ok ? 'Request accepted!' : 'Failed to accept.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: ok ? _C.green : _C.error,
       ));
     }
   }
@@ -655,12 +1535,21 @@ class _RequestCard extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Decline Request'),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
+        title: const Text('Decline Request',
+            style: TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 17)),
         content: TextField(
           controller: reasonCtrl,
-          decoration: const InputDecoration(
+          style: const TextStyle(fontSize: 14, color: _C.text),
+          decoration: InputDecoration(
             labelText: 'Reason (optional)',
-            border: OutlineInputBorder(),
+            filled: true,
+            fillColor: _C.surfaceAlt,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: _C.border)),
           ),
         ),
         actions: [
@@ -668,33 +1557,39 @@ class _RequestCard extends ConsumerWidget {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Decline')),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Decline',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
         ],
       ),
     );
-
     if (confirmed == true && context.mounted) {
       final ok = await ref
           .read(mentorshipProvider.notifier)
-          .respondRequest(req.id, 'REJECTED',
+          .respondRequest(widget.req.id, 'REJECTED',
               rejectionReason: reasonCtrl.text.trim().isEmpty
                   ? null
                   : reasonCtrl.text.trim());
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(ok ? 'Request declined.' : 'Failed to decline.'),
+          content:
+              Text(ok ? 'Request declined.' : 'Failed to decline.'),
+          behavior: SnackBarBehavior.floating,
         ));
       }
     }
   }
 }
 
-// ─────────────────────────────────────────────
-// Active relationships tab
-// ─────────────────────────────────────────────
-
+// ─── Active Tab ───────────────────────────────────────────────────────────────
 class _ActiveTab extends ConsumerWidget {
   final List<RelationshipModel> relationships;
   const _ActiveTab({required this.relationships});
@@ -702,388 +1597,314 @@ class _ActiveTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (relationships.isEmpty) {
-      return const Center(child: Text('No active mentorships.'));
+      return const _EmptyTab(
+        icon: Icons.handshake_rounded,
+        title: 'No active mentorships',
+        subtitle: 'Accept a request to start a mentorship',
+      );
     }
-
     return RefreshIndicator(
-      onRefresh: () => ref.read(mentorshipProvider.notifier).loadAll(),
+      color: _C.accent,
+      backgroundColor: _C.surface,
+      onRefresh: () =>
+          ref.read(mentorshipProvider.notifier).loadAll(),
       child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 80),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
         itemCount: relationships.length,
-        itemBuilder: (_, i) => _RelationshipCard(rel: relationships[i]),
+        itemBuilder: (_, i) =>
+            _RelCard(rel: relationships[i], index: i),
       ),
     );
   }
 }
 
-class _RelationshipCard extends ConsumerWidget {
+class _RelCard extends ConsumerStatefulWidget {
   final RelationshipModel rel;
-  const _RelationshipCard({required this.rel});
+  final int index;
+  const _RelCard({required this.rel, required this.index});
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'ACTIVE':    return Colors.green;
-      case 'PAUSED':    return Colors.orange;
-      case 'COMPLETED': return Colors.grey;
-      default:          return Colors.grey;
-    }
+  @override
+  ConsumerState<_RelCard> createState() => _RelCardState();
+}
+
+class _RelCardState extends ConsumerState<_RelCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double>   _fade;
+  late final Animation<Offset>   _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this,
+        duration: Duration(
+            milliseconds: 360 + (widget.index * 50).clamp(0, 350)));
+    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+            begin: const Offset(0, 0.07), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    Future.delayed(Duration(milliseconds: widget.index * 50),
+        () { if (mounted) _ctrl.forward(); });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(currentUserProvider);
-    final otherName = rel.menteeName == currentUser?.username
-        ? rel.mentorName
-        : rel.menteeName;
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showUpdateSheet(context, ref),
+  @override
+  Widget build(BuildContext context) {
+    final rel         = widget.rel;
+    final currentUser = ref.watch(currentUserProvider);
+    final otherName   = rel.menteeUserName == currentUser?.username
+        ? rel.mentorUserName
+        : rel.menteeUserName;
+    final color       = _avatarColor(otherName);
+    final sColor      = _statusColor(rel.status);
+    final sLight      = _statusLight(rel.status);
+
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ──────────────────────────────────────────────────
-              Row(
-                children: [
-                  const CircleAvatar(
-                    backgroundColor: Color(0xFFE8F5E9),
-                    child: Icon(Icons.handshake_rounded,
-                        color: Color(0xFF2E7D32)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: _C.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _C.borderSoft),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6, offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      width: 46, height: 46,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(_initial(otherName),
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(otherName,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: _C.text,
+                                letterSpacing: -0.2,
+                              )),
+                          Row(
+                            children: [
+                              const Icon(Icons.schedule_rounded,
+                                  size: 11,
+                                  color: _C.textMuted),
+                              const SizedBox(width: 3),
+                              Text(
+                                'Started ${timeAgo(rel.createdAt)}',
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: _C.textMuted),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: sLight,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: sColor.withOpacity(0.25)),
+                      ),
+                      child: Text(rel.status,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: sColor,
+                            letterSpacing: 0.2,
+                          )),
+                    ),
+                  ],
+                ),
+
+                // Goals
+                if (rel.goals.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _C.surfaceAlt,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _C.border),
+                    ),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(otherName,
-                            style:
-                                Theme.of(context).textTheme.titleMedium),
-                        Text(
-                          'Started ${timeAgo(rel.createdAt)}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        const Icon(Icons.flag_rounded,
+                            size: 14, color: _C.textMuted),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(rel.goals,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: _C.textSec,
+                                  height: 1.4)),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _statusColor(rel.status).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      rel.status,
-                      style: TextStyle(
-                        color: _statusColor(rel.status),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                ],
+
+                // Cadence row
+                if (rel.frequency.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _CadenceChip(
+                        icon: Icons.repeat_rounded,
+                        label: rel.frequency
+                            .replaceAll('_', ' '),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              // ── Goals ────────────────────────────────────────────────────
-              if (rel.goals.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.flag_outlined,
-                        size: 14, color: Color(0xFF9E9E9E)),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        rel.goals,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
+                      const SizedBox(width: 8),
+                      _CadenceChip(
+                        icon: Icons.videocam_rounded,
+                        label: rel.preferredChannel
+                            .replaceAll('_', ' '),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-              // ── Cadence ──────────────────────────────────────────────────
-              if (rel.frequency.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.repeat_outlined,
-                        size: 14, color: Color(0xFF9E9E9E)),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${rel.frequency.replaceAll('_', ' ')} · ${rel.preferredChannel.replaceAll('_', ' ')}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 12),
-              // ── Action row ───────────────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    icon: const Icon(Icons.star_rate_rounded,
-                        size: 16, color: Colors.amber),
-                    label: const Text('Feedback'),
-                    onPressed: () => _showFeedbackSheet(context, ref),
-                  ),
-                  const SizedBox(width: 4),
-                  TextButton.icon(
-                    icon: const Icon(Icons.exit_to_app,
-                        size: 16, color: Colors.red),
-                    label: const Text('End',
-                        style: TextStyle(color: Colors.red)),
-                    onPressed: () => _confirmEnd(context, ref),
+                    ],
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  // ── Update relationship sheet ────────────────────────────────────────────
-
-  void _showUpdateSheet(BuildContext context, WidgetRef ref) {
-    final goalsCtrl = TextEditingController(text: rel.goals);
-    String frequency =
-        rel.frequency.isNotEmpty ? rel.frequency : 'BIWEEKLY';
-    String channel =
-        rel.preferredChannel.isNotEmpty ? rel.preferredChannel : 'VIDEO_CALL';
-    String status = rel.status;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Update Relationship',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              TextField(
-                controller: goalsCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Goals',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: frequency,
-                decoration: const InputDecoration(
-                    labelText: 'Frequency', border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
-                  DropdownMenuItem(
-                      value: 'BIWEEKLY', child: Text('Biweekly')),
-                  DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
-                ],
-                onChanged: (v) =>
-                    setSheet(() => frequency = v ?? frequency),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: channel,
-                decoration: const InputDecoration(
-                    labelText: 'Preferred Channel',
-                    border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: 'EMAIL', child: Text('Email')),
-                  DropdownMenuItem(value: 'PHONE', child: Text('Phone')),
-                  DropdownMenuItem(
-                      value: 'VIDEO_CALL', child: Text('Video Call')),
-                  DropdownMenuItem(
-                      value: 'IN_PERSON', child: Text('In Person')),
-                  DropdownMenuItem(
-                      value: 'MESSAGING', child: Text('Messaging')),
-                ],
-                onChanged: (v) => setSheet(() => channel = v ?? channel),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: status,
-                decoration: const InputDecoration(
-                    labelText: 'Status', border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: 'ACTIVE', child: Text('Active')),
-                  DropdownMenuItem(value: 'PAUSED', child: Text('Paused')),
-                  DropdownMenuItem(
-                      value: 'COMPLETED', child: Text('Completed')),
-                ],
-                onChanged: (v) => setSheet(() => status = v ?? status),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                child: const Text('Save Changes'),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  final ok = await ref
-                      .read(mentorshipProvider.notifier)
-                      .updateRelationship(rel.id, {
-                    'goals': goalsCtrl.text.trim(),
-                    'frequency': frequency,
-                    'preferredChannel': channel,
-                    'status': status,
-                  });
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                          ok ? 'Relationship updated.' : 'Update failed.'),
-                      backgroundColor: ok ? Colors.green : Colors.red,
-                    ));
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Feedback sheet ───────────────────────────────────────────────────────
-
-  void _showFeedbackSheet(BuildContext context, WidgetRef ref) {
-    int rating = 5;
-    final commentCtrl = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Submit Feedback',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  5,
-                  (i) => IconButton(
-                    icon: Icon(
-                      i < rating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 32,
-                    ),
-                    onPressed: () => setSheet(() => rating = i + 1),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: commentCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Comment',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.history),
-                label: const Text('View Past Feedback'),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _showFeedbackHistory(context, ref);
-                },
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                child: const Text('Submit'),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  final ok = await ref
-                      .read(mentorshipProvider.notifier)
-                      .submitFeedback(
-                          rel.id, rating, commentCtrl.text.trim());
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                          ok ? 'Feedback submitted!' : 'Failed to submit.'),
-                      backgroundColor: ok ? Colors.green : Colors.red,
-                    ));
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Feedback history ─────────────────────────────────────────────────────
-
-  void _showFeedbackHistory(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => FutureBuilder<List<FeedbackModel>>(
-        future: ref.read(mentorshipProvider.notifier).getFeedback(rel.id),
-        builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const SizedBox(
-              height: 200,
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final feedbacks = snap.data ?? [];
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.5,
-            builder: (_, ctrl) => ListView(
-              controller: ctrl,
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text('Feedback History',
-                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
-                if (feedbacks.isEmpty)
-                  const Text('No feedback yet.')
-                else
-                  ...feedbacks.map((f) => _FeedbackTile(feedback: f)),
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _showUpdateSheet(context, ref),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _C.accent,
+                          side: BorderSide(
+                              color: _C.accent
+                                  .withOpacity(0.4)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(
+                            Icons.edit_rounded, size: 15),
+                        label: const Text('Update',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _showFeedbackSheet(context, ref),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _C.amber,
+                          side: BorderSide(
+                              color: _C.amber
+                                  .withOpacity(0.4)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(
+                            Icons.star_rounded, size: 15),
+                        label: const Text('Feedback',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () =>
+                          _confirmEnd(context, ref),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _C.error,
+                        side: BorderSide(
+                            color: _C.error.withOpacity(0.4)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(12)),
+                        minimumSize: const Size(44, 40),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                      child: const Icon(Icons.exit_to_app_rounded,
+                          size: 16),
+                    ),
+                  ],
+                ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 
-  // ── End relationship ─────────────────────────────────────────────────────
+  void _showUpdateSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _UpdateRelSheet(rel: widget.rel),
+    );
+  }
+
+  void _showFeedbackSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FeedbackSheet(rel: widget.rel),
+    );
+  }
 
   Future<void> _confirmEnd(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('End Relationship'),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
+        title: const Text('End Mentorship',
+            style: TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 17)),
         content: const Text(
             'Are you sure you want to end this mentorship? This cannot be undone.'),
         actions: [
@@ -1091,65 +1912,510 @@ class _RelationshipCard extends ConsumerWidget {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('End')),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _C.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('End',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
         ],
       ),
     );
-
     if (confirmed == true && context.mounted) {
       final ok = await ref
           .read(mentorshipProvider.notifier)
-          .endRelationship(rel.id);
+          .endRelationship(widget.rel.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              ok ? 'Relationship ended.' : 'Failed to end relationship.'),
-          backgroundColor: ok ? Colors.red : Colors.grey,
+          content: Text(ok
+              ? 'Mentorship ended.'
+              : 'Failed to end relationship.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: ok ? _C.textSec : _C.error,
         ));
       }
     }
   }
 }
 
-// ─────────────────────────────────────────────
-// Feedback tile
-// ─────────────────────────────────────────────
-
-class _FeedbackTile extends StatelessWidget {
-  final FeedbackModel feedback;
-  const _FeedbackTile({required this.feedback});
+class _CadenceChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _CadenceChip({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _C.surfaceAlt,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _C.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: _C.textMuted),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _C.textSec)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Update Relationship Sheet ────────────────────────────────────────────────
+class _UpdateRelSheet extends ConsumerStatefulWidget {
+  final RelationshipModel rel;
+  const _UpdateRelSheet({required this.rel});
+
+  @override
+  ConsumerState<_UpdateRelSheet> createState() =>
+      _UpdateRelSheetState();
+}
+
+class _UpdateRelSheetState extends ConsumerState<_UpdateRelSheet> {
+  late final TextEditingController _goalsCtrl;
+  late String _frequency;
+  late String _channel;
+  late String _status;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _goalsCtrl = TextEditingController(text: widget.rel.goals);
+    _frequency = widget.rel.frequency.isNotEmpty
+        ? widget.rel.frequency
+        : 'BIWEEKLY';
+    _channel   = widget.rel.preferredChannel.isNotEmpty
+        ? widget.rel.preferredChannel
+        : 'VIDEO_CALL';
+    _status    = widget.rel.status;
+  }
+
+  @override
+  void dispose() {
+    _goalsCtrl.dispose();
+    super.dispose();
+  }
+
+  InputDecoration _deco(String label, {Widget? prefix}) =>
+      InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 13, color: _C.textSec),
+        prefixIcon: prefix,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true,
+        fillColor: _C.surfaceAlt,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.accent, width: 1.5)),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          20, 0, 20,
+          MediaQuery.of(context).viewInsets.bottom + 28),
+      child: SingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                    color: _C.border,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
             Row(
               children: [
-                ...List.generate(
-                  5,
-                  (i) => Icon(
-                    i < feedback.rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 16,
-                  ),
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                      color: _C.accentLight,
+                      borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.edit_rounded,
+                      color: _C.accent, size: 18),
                 ),
-                const Spacer(),
-                Text(
-                  timeAgo(feedback.createdAt),
-                  style: Theme.of(context).textTheme.bodySmall,
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Update Relationship',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: _C.text,
+                            letterSpacing: -0.4,
+                          )),
+                      Text('Adjust goals and preferences',
+                          style: TextStyle(
+                              fontSize: 13, color: _C.textMuted)),
+                    ],
+                  ),
                 ),
               ],
             ),
-            if (feedback.comment.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(feedback.comment),
+            const SizedBox(height: 20),
+
+            TextField(
+              controller: _goalsCtrl,
+              maxLines: 3, minLines: 2,
+              style: const TextStyle(fontSize: 14, color: _C.text),
+              decoration: _deco('Goals',
+                  prefix: const Padding(
+                    padding: EdgeInsets.only(bottom: 36),
+                    child: Icon(Icons.flag_rounded,
+                        size: 18, color: _C.textMuted),
+                  )),
+            ),
+            const SizedBox(height: 12),
+
+            _SheetDropdown<String>(
+              value: _frequency,
+              label: 'Frequency',
+              icon: Icons.repeat_rounded,
+              items: const {
+                'WEEKLY':   'Weekly',
+                'BIWEEKLY': 'Biweekly',
+                'MONTHLY':  'Monthly',
+              },
+              onChanged: (v) => setState(() => _frequency = v),
+            ),
+            const SizedBox(height: 12),
+
+            _SheetDropdown<String>(
+              value: _channel,
+              label: 'Preferred Channel',
+              icon: Icons.videocam_rounded,
+              items: const {
+                'EMAIL':      'Email',
+                'PHONE':      'Phone',
+                'VIDEO_CALL': 'Video Call',
+                'IN_PERSON':  'In Person',
+                'MESSAGING':  'Messaging',
+              },
+              onChanged: (v) => setState(() => _channel = v),
+            ),
+            const SizedBox(height: 12),
+
+            _SheetDropdown<String>(
+              value: _status,
+              label: 'Status',
+              icon: Icons.info_rounded,
+              items: const {
+                'ACTIVE':    'Active',
+                'PAUSED':    'Paused',
+                'COMPLETED': 'Completed',
+              },
+              onChanged: (v) => setState(() => _status = v),
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: _saving ? null : () async {
+                  setState(() => _saving = true);
+                  Navigator.pop(context);
+                  final ok = await ref
+                      .read(mentorshipProvider.notifier)
+                      .updateRelationship(widget.rel.id, {
+                    'goals':            _goalsCtrl.text.trim(),
+                    'frequency':        _frequency,
+                    'preferredChannel': _channel,
+                    'status':           _status,
+                  });
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          ok ? 'Relationship updated!' : 'Update failed.'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: ok ? _C.green : _C.error,
+                    ));
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _C.accent,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: _saving
+                    ? const SizedBox(
+                        width: 18, height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.check_circle_rounded, size: 18),
+                label: const Text('Save Changes',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Feedback Sheet ───────────────────────────────────────────────────────────
+class _FeedbackSheet extends ConsumerStatefulWidget {
+  final RelationshipModel rel;
+  const _FeedbackSheet({required this.rel});
+
+  @override
+  ConsumerState<_FeedbackSheet> createState() => _FeedbackSheetState();
+}
+
+class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
+  int    _rating      = 5;
+  final  _commentCtrl = TextEditingController();
+  bool   _submitting  = false;
+  bool   _showHistory = false;
+  List<FeedbackModel>? _history;
+  bool   _loadingHistory = false;
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _loadingHistory = true);
+    final list = await ref
+        .read(mentorshipProvider.notifier)
+        .getFeedback(widget.rel.id);
+    setState(() {
+      _history       = list;
+      _loadingHistory = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          20, 0, 20,
+          MediaQuery.of(context).viewInsets.bottom + 28),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                    color: _C.border,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                      color: _C.orangeLight,
+                      borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.star_rounded,
+                      color: _C.amber, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Feedback',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: _C.text,
+                            letterSpacing: -0.4,
+                          )),
+                      Text('Rate your experience',
+                          style: TextStyle(
+                              fontSize: 13, color: _C.textMuted)),
+                    ],
+                  ),
+                ),
+                // History toggle
+                TextButton(
+                  onPressed: () {
+                    if (!_showHistory && _history == null) {
+                      _loadHistory();
+                    }
+                    setState(() => _showHistory = !_showHistory);
+                  },
+                  child: Text(
+                    _showHistory ? 'Write' : 'History',
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (_showHistory) ...[
+              if (_loadingHistory)
+                const Center(
+                    child: CircularProgressIndicator(
+                        color: _C.accent))
+              else if (_history == null || _history!.isEmpty)
+                const Center(
+                    child: Text('No feedback yet.',
+                        style: TextStyle(color: _C.textMuted)))
+              else
+                ..._history!.map((f) => _FeedbackTile(f: f)),
+            ] else ...[
+              // Star row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) {
+                  return GestureDetector(
+                    onTap: () => setState(() => _rating = i + 1),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        i < _rating
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: _C.amber,
+                        size: 38,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              Center(
+                child: Text(
+                  [
+                    '',
+                    'Poor',
+                    'Fair',
+                    'Good',
+                    'Great',
+                    'Excellent'
+                  ][_rating],
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _C.amber,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              TextField(
+                controller: _commentCtrl,
+                maxLines: 3, minLines: 2,
+                style: const TextStyle(fontSize: 14, color: _C.text),
+                decoration: InputDecoration(
+                  labelText: 'Comment',
+                  hintText: 'Share your experience…',
+                  labelStyle:
+                      const TextStyle(fontSize: 13, color: _C.textSec),
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.only(bottom: 36),
+                    child: Icon(Icons.comment_rounded,
+                        size: 18, color: _C.textMuted),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                  filled: true,
+                  fillColor: _C.surfaceAlt,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: _C.border)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: _C.border)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(
+                          color: _C.accent, width: 1.5)),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: _submitting ? null : () async {
+                    setState(() => _submitting = true);
+                    final ok = await ref
+                        .read(mentorshipProvider.notifier)
+                        .submitFeedback(widget.rel.id, _rating,
+                            _commentCtrl.text.trim());
+                    if (!mounted) return;
+                    setState(() => _submitting = false);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(ok
+                          ? 'Feedback submitted!'
+                          : 'Failed to submit.'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: ok ? _C.green : _C.error,
+                    ));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _C.amber,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: _C.amber.withOpacity(0.4),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: _submitting
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.send_rounded, size: 18),
+                  label: const Text('Submit Feedback',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                ),
+              ),
             ],
           ],
         ),
@@ -1158,39 +2424,171 @@ class _FeedbackTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// Edit profile bottom sheet
-// ─────────────────────────────────────────────
+class _FeedbackTile extends StatelessWidget {
+  final FeedbackModel f;
+  const _FeedbackTile({required this.f});
 
+  @override
+  Widget build(BuildContext context) {
+    final color = _avatarColor(f.givenByUserName);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _C.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _C.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30, height: 30,
+                decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    shape: BoxShape.circle),
+                child: Center(
+                  child: Text(_initial(f.givenByUserName),
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: color)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(f.givenByUserName,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _C.text,
+                        )),
+                    Text(f.givenByRole,
+                        style: const TextStyle(
+                            fontSize: 10, color: _C.textMuted)),
+                  ],
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => Icon(
+                    i < f.rating
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    color: _C.amber,
+                    size: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(timeAgo(f.createdAt),
+                  style: const TextStyle(
+                      fontSize: 10, color: _C.textMuted)),
+            ],
+          ),
+          if (f.comment.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(f.comment,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: _C.textSec,
+                  height: 1.4,
+                )),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Shared Dropdown ──────────────────────────────────────────────────────────
+class _SheetDropdown<T> extends StatelessWidget {
+  final T value;
+  final String label;
+  final IconData icon;
+  final Map<T, String> items;
+  final ValueChanged<T> onChanged;
+  const _SheetDropdown({
+    required this.value, required this.label,
+    required this.icon, required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      style: const TextStyle(fontSize: 14, color: _C.text),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 13, color: _C.textSec),
+        prefixIcon: Icon(icon, size: 18, color: _C.textMuted),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true,
+        fillColor: _C.surfaceAlt,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.accent, width: 1.5)),
+      ),
+      items: items.entries
+          .map((e) => DropdownMenuItem<T>(
+                value: e.key,
+                child: Text(e.value),
+              ))
+          .toList(),
+      onChanged: (v) { if (v != null) onChanged(v); },
+    );
+  }
+}
+
+// ─── Edit Profile Sheet ───────────────────────────────────────────────────────
 class _EditProfileSheet extends ConsumerStatefulWidget {
   final MentorshipProfileModel? existing;
   const _EditProfileSheet({this.existing});
 
   @override
-  ConsumerState<_EditProfileSheet> createState() => _EditProfileSheetState();
+  ConsumerState<_EditProfileSheet> createState() =>
+      _EditProfileSheetState();
 }
 
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
-  final _bioCtrl = TextEditingController();
-  final _deptCtrl = TextEditingController();
+  final _bioCtrl       = TextEditingController();
+  final _deptCtrl      = TextEditingController();
+  final _expCtrl       = TextEditingController();
+  // Expertise and interests as chip lists
   final _expertiseCtrl = TextEditingController();
   final _interestsCtrl = TextEditingController();
-  final _expCtrl = TextEditingController();
-  String _role = 'MENTEE';
+  final List<String> _expertiseList = [];
+  final List<String> _interestList  = [];
+  String _role         = 'MENTEE';
   String _availability = 'AVAILABLE';
+  bool   _saving       = false;
 
   @override
   void initState() {
     super.initState();
     final p = widget.existing;
     if (p != null) {
-      _bioCtrl.text = p.bio;
+      _bioCtrl.text  = p.bio;
       _deptCtrl.text = p.department;
-      _expertiseCtrl.text = p.expertise.join(', ');
-      _interestsCtrl.text = p.interests.join(', ');
-      _expCtrl.text = p.yearsOfExperience.toString();
-      _role = p.role;
-      _availability = p.availability;
+      _expCtrl.text  = p.yearsOfExperience.toString();
+      _role          = p.role;
+      _availability  = p.availability;
+      _expertiseList.addAll(p.expertise);
+      _interestList.addAll(p.interests);
     }
   }
 
@@ -1198,130 +2596,390 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _bioCtrl.dispose();
     _deptCtrl.dispose();
+    _expCtrl.dispose();
     _expertiseCtrl.dispose();
     _interestsCtrl.dispose();
-    _expCtrl.dispose();
     super.dispose();
   }
 
-  List<String> _split(String raw) => raw
-      .split(',')
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
-      .toList();
+  InputDecoration _deco(String label, {Widget? prefix}) =>
+      InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 13, color: _C.textSec),
+        prefixIcon: prefix,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true,
+        fillColor: _C.surfaceAlt,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _C.accent, width: 1.5)),
+      );
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _chipRow({
+    required List<String> items,
+    required TextEditingController ctrl,
+    required VoidCallback onAdd,
+    required void Function(String) onRemove,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (items.isNotEmpty) ...[
+          Wrap(
+            spacing: 8, runSpacing: 8,
+            children: items.map((s) => Container(
+              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color.withOpacity(0.25)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(s,
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: color)),
+                  const SizedBox(width: 5),
+                  GestureDetector(
+                    onTap: () => onRemove(s),
+                    child: Container(
+                      width: 16, height: 16,
+                      decoration: BoxDecoration(
+                          color: color.withOpacity(0.15),
+                          shape: BoxShape.circle),
+                      child: Icon(Icons.close_rounded,
+                          size: 10, color: color),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
           children: [
-            Text('My Mentorship Profile',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _role,
-              decoration: const InputDecoration(
-                  labelText: 'Role', border: OutlineInputBorder()),
-              items: const [
-                DropdownMenuItem(value: 'MENTOR', child: Text('Mentor')),
-                DropdownMenuItem(value: 'MENTEE', child: Text('Mentee')),
-                DropdownMenuItem(value: 'BOTH', child: Text('Both')),
-              ],
-              onChanged: (v) => setState(() => _role = v ?? _role),
+            Expanded(
+              child: TextField(
+                controller: ctrl,
+                onSubmitted: (_) => onAdd(),
+                style: const TextStyle(fontSize: 14, color: _C.text),
+                decoration: InputDecoration(
+                  hintText: 'Add item…',
+                  hintStyle: const TextStyle(
+                      color: _C.textMuted, fontSize: 13),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: _C.surfaceAlt,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _C.border)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _C.border)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                          color: _C.accent, width: 1.5)),
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _deptCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Department', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _expCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                  labelText: 'Years of Experience',
-                  border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _expertiseCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Expertise (comma-separated)',
-                  hintText: 'Java, React, ML',
-                  border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _interestsCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Interests (comma-separated)',
-                  hintText: 'Machine Learning, Web Development',
-                  border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _bioCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                  labelText: 'Bio', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _availability,
-              decoration: const InputDecoration(
-                  labelText: 'Availability', border: OutlineInputBorder()),
-              items: const [
-                DropdownMenuItem(
-                    value: 'HIGHLY_AVAILABLE',
-                    child: Text('Highly Available')),
-                DropdownMenuItem(
-                    value: 'AVAILABLE', child: Text('Available')),
-                DropdownMenuItem(value: 'LIMITED', child: Text('Limited')),
-                DropdownMenuItem(
-                    value: 'NOT_AVAILABLE', child: Text('Not Available')),
-              ],
-              onChanged: (v) =>
-                  setState(() => _availability = v ?? _availability),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              child: const Text('Save Profile'),
-              onPressed: () async {
-                Navigator.pop(context);
-                final ok = await ref
-                    .read(mentorshipProvider.notifier)
-                    .saveProfile({
-                  'role': _role,
-                  'department': _deptCtrl.text.trim(),
-                  'yearsOfExperience':
-                      int.tryParse(_expCtrl.text.trim()) ?? 0,
-                  'expertise': _split(_expertiseCtrl.text),
-                  'interests': _split(_interestsCtrl.text),
-                  'bio': _bioCtrl.text.trim(),
-                  'availability': _availability,
-                  'timezone': 'Asia/Colombo',
-                });
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content:
-                        Text(ok ? 'Profile saved!' : 'Save failed.'),
-                    backgroundColor: ok ? Colors.green : Colors.red,
-                  ));
-                }
-              },
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 46, height: 46,
+              child: ElevatedButton(
+                onPressed: onAdd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Icon(Icons.add_rounded, size: 20),
+              ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          20, 0, 20,
+          MediaQuery.of(context).viewInsets.bottom + 28),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                    color: _C.border,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                      color: _C.accentLight,
+                      borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.manage_accounts_rounded,
+                      color: _C.accent, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('My Mentorship Profile',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: _C.text,
+                            letterSpacing: -0.4,
+                          )),
+                      Text('Tell others about yourself',
+                          style: TextStyle(
+                              fontSize: 13, color: _C.textMuted)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Role
+            _SheetDropdown<String>(
+              value: _role,
+              label: 'Role',
+              icon: Icons.badge_rounded,
+              items: const {
+                'MENTOR': 'Mentor',
+                'MENTEE': 'Mentee',
+                'BOTH':   'Both',
+              },
+              onChanged: (v) => setState(() => _role = v),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: _deptCtrl,
+              style: const TextStyle(fontSize: 14, color: _C.text),
+              decoration: _deco('Department',
+                  prefix: const Icon(Icons.business_rounded,
+                      size: 18, color: _C.textMuted)),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              controller: _expCtrl,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 14, color: _C.text),
+              decoration: _deco('Years of Experience',
+                  prefix: const Icon(Icons.work_history_rounded,
+                      size: 18, color: _C.textMuted)),
+            ),
+            const SizedBox(height: 16),
+
+            // Expertise
+            const Text('Expertise',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _C.textSec,
+                  letterSpacing: 0.3,
+                )),
+            const SizedBox(height: 8),
+            _chipRow(
+              items: _expertiseList,
+              ctrl: _expertiseCtrl,
+              color: _C.accent,
+              onAdd: () {
+                final v = _expertiseCtrl.text.trim();
+                if (v.isNotEmpty && !_expertiseList.contains(v)) {
+                  setState(() {
+                    _expertiseList.add(v);
+                    _expertiseCtrl.clear();
+                  });
+                }
+              },
+              onRemove: (s) =>
+                  setState(() => _expertiseList.remove(s)),
+            ),
+            const SizedBox(height: 16),
+
+            // Interests
+            const Text('Interests',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _C.textSec,
+                  letterSpacing: 0.3,
+                )),
+            const SizedBox(height: 8),
+            _chipRow(
+              items: _interestList,
+              ctrl: _interestsCtrl,
+              color: _C.teal,
+              onAdd: () {
+                final v = _interestsCtrl.text.trim();
+                if (v.isNotEmpty && !_interestList.contains(v)) {
+                  setState(() {
+                    _interestList.add(v);
+                    _interestsCtrl.clear();
+                  });
+                }
+              },
+              onRemove: (s) =>
+                  setState(() => _interestList.remove(s)),
+            ),
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: _bioCtrl,
+              maxLines: 3, minLines: 2,
+              style: const TextStyle(fontSize: 14, color: _C.text),
+              decoration: _deco('Bio',
+                  prefix: const Padding(
+                    padding: EdgeInsets.only(bottom: 36),
+                    child: Icon(Icons.notes_rounded,
+                        size: 18, color: _C.textMuted),
+                  )),
+            ),
+            const SizedBox(height: 12),
+
+            // Availability
+            _SheetDropdown<String>(
+              value: _availability,
+              label: 'Availability',
+              icon: Icons.event_available_rounded,
+              items: const {
+                'HIGHLY_AVAILABLE': 'Highly Available',
+                'AVAILABLE':        'Available',
+                'LIMITED':          'Limited',
+                'NOT_AVAILABLE':    'Not Available',
+              },
+              onChanged: (v) => setState(() => _availability = v),
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: _saving ? null : () async {
+                  setState(() => _saving = true);
+                  Navigator.pop(context);
+                  final ok = await ref
+                      .read(mentorshipProvider.notifier)
+                      .saveProfile({
+                    'role':              _role,
+                    'department':        _deptCtrl.text.trim(),
+                    'yearsOfExperience': int.tryParse(_expCtrl.text.trim()) ?? 0,
+                    'expertise':         _expertiseList,
+                    'interests':         _interestList,
+                    'bio':               _bioCtrl.text.trim(),
+                    'availability':      _availability,
+                    'timezone':          'Asia/Colombo',
+                  });
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          ok ? 'Profile saved!' : 'Save failed.'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: ok ? _C.green : _C.error,
+                    ));
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _C.accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: _C.accent.withOpacity(0.4),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: _saving
+                    ? const SizedBox(
+                        width: 18, height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.check_circle_rounded, size: 18),
+                label: const Text('Save Profile',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Empty Tab ────────────────────────────────────────────────────────────────
+class _EmptyTab extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  const _EmptyTab({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80, height: 80,
+            decoration: BoxDecoration(
+                color: _C.accentLight,
+                borderRadius: BorderRadius.circular(24)),
+            child: Icon(icon, size: 36, color: _C.accent),
+          ),
+          const SizedBox(height: 20),
+          Text(title,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: _C.text,
+                letterSpacing: -0.3,
+              )),
+          const SizedBox(height: 6),
+          Text(subtitle,
+              style: const TextStyle(
+                  fontSize: 13, color: _C.textMuted)),
+        ],
       ),
     );
   }

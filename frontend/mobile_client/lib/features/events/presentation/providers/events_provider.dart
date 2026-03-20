@@ -1,3 +1,4 @@
+import 'package:decp_mobile_app/features/events/data/models/rsvp_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/event_remote_datasource.dart';
 import '../../data/models/event_model.dart';

@@ -12,7 +12,8 @@ class ApiConstants {
   static const String register = '/users/register';
   static const String users = '/users';
   static const String alumni = '/users/alumni';
-  static const String userSearch = '/users/search';
+  static const String userByUsername = '/users/search';
+  static const String searchUser = '/users/search/query';
 
   // Posts
   static const String posts = '/posts';

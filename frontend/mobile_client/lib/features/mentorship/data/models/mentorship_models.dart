@@ -85,116 +85,46 @@ class MatchModel {
 class MentorshipRequestModel {
   final int id;
   final int menteeId;
-  final String menteeName;
+  final String menteeUserName;
   final int mentorId;
-  final String mentorName;
+  final String mentorUserName;
   final String message;
   final List<String> topics;
-  final String proposedDuration; // ONE_MONTH, THREE_MONTHS, SIX_MONTHS, ONE_YEAR
-  final String status;           // PENDING, ACCEPTED, REJECTED, CANCELLED
-  final String? rejectionReason; // populated when status == REJECTED
+  final String proposedDuration;
+  final String status;
+  final String? rejectionReason;
   final String createdAt;
+  final String? respondedAt;
 
   const MentorshipRequestModel({
     required this.id,
     required this.menteeId,
-    required this.menteeName,
+    required this.menteeUserName,
     required this.mentorId,
-    required this.mentorName,
+    required this.mentorUserName,
     required this.message,
     required this.topics,
     required this.proposedDuration,
     required this.status,
     this.rejectionReason,
     required this.createdAt,
+    this.respondedAt,
   });
 
   factory MentorshipRequestModel.fromJson(Map<String, dynamic> json) {
     return MentorshipRequestModel(
       id: (json['id'] as num).toInt(),
       menteeId: (json['menteeId'] as num).toInt(),
-      menteeName: json['menteeName'] as String? ?? 'Student',
+      menteeUserName: json['menteeUserName'] as String,
       mentorId: (json['mentorId'] as num).toInt(),
-      mentorName: json['mentorName'] as String? ?? 'Alum/Staff',
-      message: json['message'] as String,
+      mentorUserName: json['mentorUserName'] as String,
+      message: json['message'] as String? ?? '',
       topics: (json['topics'] as List?)?.map((e) => e as String).toList() ?? [],
       proposedDuration: json['proposedDuration'] as String,
       status: json['status'] as String,
       rejectionReason: json['rejectionReason'] as String?,
       createdAt: json['createdAt'] as String,
-    );
-  }
-}
-
-class RelationshipModel {
-  final int id;
-  final int menteeId;
-  final String menteeName;
-  final int mentorId;
-  final String mentorName;
-  final String goals;
-  final String frequency;        // WEEKLY, BIWEEKLY, MONTHLY
-  final String preferredChannel; // EMAIL, PHONE, VIDEO_CALL, IN_PERSON, MESSAGING
-  final String status;           // ACTIVE, PAUSED, COMPLETED
-  final String createdAt;
-
-  const RelationshipModel({
-    required this.id,
-    required this.menteeId,
-    required this.menteeName,
-    required this.mentorId,
-    required this.mentorName,
-    required this.goals,
-    required this.frequency,
-    required this.preferredChannel,
-    required this.status,
-    required this.createdAt,
-  });
-
-  factory RelationshipModel.fromJson(Map<String, dynamic> json) {
-    return RelationshipModel(
-      id: (json['id'] as num).toInt(),
-      menteeId: (json['menteeId'] as num).toInt(),
-      menteeName: json['menteeName'] as String? ?? 'Mentee',
-      mentorId: (json['mentorId'] as num).toInt(),
-      mentorName: json['mentorName'] as String? ?? 'Mentor',
-      goals: json['goals'] as String? ?? '',
-      frequency: json['frequency'] as String? ?? '',
-      preferredChannel: json['preferredChannel'] as String? ?? '',
-      status: json['status'] as String,
-      createdAt: json['createdAt'] as String,
-    );
-  }
-}
-
-// ── NEW ────────────────────────────────────────────────────────────────────────
-// Maps POST /api/mentorship/relationships/{id}/feedback
-//      GET  /api/mentorship/relationships/{id}/feedback
-class FeedbackModel {
-  final int id;
-  final int relationshipId;
-  final int reviewerId;
-  final int rating;     // 1–5
-  final String comment;
-  final String createdAt;
-
-  const FeedbackModel({
-    required this.id,
-    required this.relationshipId,
-    required this.reviewerId,
-    required this.rating,
-    required this.comment,
-    required this.createdAt,
-  });
-
-  factory FeedbackModel.fromJson(Map<String, dynamic> json) {
-    return FeedbackModel(
-      id: (json['id'] as num).toInt(),
-      relationshipId: (json['relationshipId'] as num).toInt(),
-      reviewerId: (json['reviewerId'] as num).toInt(),
-      rating: (json['rating'] as num).toInt(),
-      comment: json['comment'] as String? ?? '',
-      createdAt: json['createdAt'] as String,
+      respondedAt: json['respondedAt'] as String?,
     );
   }
 }

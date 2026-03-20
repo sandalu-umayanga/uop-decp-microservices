@@ -1,16 +1,28 @@
+import 'package:decp_mobile_app/features/research/data/models/project_member_model.dart';
+
 class ResearchModel {
   final int? id;
   final String title;
   final String researchAbstract;
   final List<String> authors;
-  final List<String> tags;
+
+  final List<String> tags; // enum -> string
+  final String category;   // enum -> string
+
   final String? documentUrl;
   final String? doi;
-  final String category;
-  final int? postedBy;
-  final String? posterName;
-  final int? downloads;
+
+  final int? createdBy;
+  final String? createdByName;
+
+  final int views;
+  final int downloads;
+  final int citations;
+
+  final List<ProjectMemberModel> members;
+
   final String? createdAt;
+  final String? updatedAt;
 
   const ResearchModel({
     this.id,
@@ -18,39 +30,68 @@ class ResearchModel {
     required this.researchAbstract,
     required this.authors,
     required this.tags,
+    required this.category,
     this.documentUrl,
     this.doi,
-    required this.category,
-    this.postedBy,
-    this.posterName,
-    this.downloads,
+    this.createdBy,
+    this.createdByName,
+    this.views = 0,
+    this.downloads = 0,
+    this.citations = 0,
+    this.members = const [],
     this.createdAt,
+    this.updatedAt,
   });
 
   factory ResearchModel.fromJson(Map<String, dynamic> json) {
     return ResearchModel(
-      id: json['id'] != null ? (json['id'] as num).toInt() : null,
-      title: json['title'] as String,
-      researchAbstract: (json['researchAbstract'] ?? json['abstract'] ?? '') as String,
-      authors: (json['authors'] as List?)?.map((e) => e as String).toList() ?? [],
-      tags: (json['tags'] as List?)?.map((e) => e as String).toList() ?? [],
-      documentUrl: json['documentUrl'] as String?,
-      doi: json['doi'] as String?,
-      category: json['category'] as String,
-      postedBy: json['postedBy'] != null ? (json['postedBy'] as num).toInt() : null,
-      posterName: json['posterName'] as String?,
-      downloads: json['downloads'] != null ? (json['downloads'] as num).toInt() : 0,
-      createdAt: json['createdAt'] as String?,
+      id: (json['id'] as num?)?.toInt(),
+
+      title: json['title']?.toString() ?? '',
+      researchAbstract: json['researchAbstract']?.toString() ?? '',
+
+      authors: (json['authors'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+
+      // enum → string
+      tags: (json['tags'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+
+      category: json['category']?.toString() ?? '',
+
+      documentUrl: json['documentUrl']?.toString(),
+      doi: json['doi']?.toString(),
+
+      createdBy: (json['createdBy'] as num?)?.toInt(),
+      createdByName: json['createdByName']?.toString(),
+
+      views: (json['views'] as num?)?.toInt() ?? 0,
+      downloads: (json['downloads'] as num?)?.toInt() ?? 0,
+      citations: (json['citations'] as num?)?.toInt() ?? 0,
+
+      members: (json['members'] as List?)
+              ?.map((e) => ProjectMemberModel.fromJson(e))
+              .toList() ??
+          [],
+
+      createdAt: json['createdAt']?.toString(),
+      updatedAt: json['updatedAt']?.toString(),
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'title': title,
-        'researchAbstract': researchAbstract,
-        'authors': authors,
-        'tags': tags,
-        'documentUrl': documentUrl,
-        'doi': doi,
-        'category': category,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'researchAbstract': researchAbstract,
+      'authors': authors,
+      'tags': tags, // must match enum names
+      'documentUrl': documentUrl,
+      'doi': doi,
+      'category': category,
+    };
+  }
 }
