@@ -175,12 +175,18 @@ const SERVICES: ServiceDefinition[] = [
       RABBITMQ_HOST: h,
       REDIS_HOST: h,
       REDIS_PORT: '6379',
+      ANALYTICS_SOURCE_USER_DB_URL:     `jdbc:postgresql://${h}:5432/decp_user_db`,
+      ANALYTICS_SOURCE_JOB_DB_URL:      `jdbc:postgresql://${h}:5432/decp_job_db`,
+      ANALYTICS_SOURCE_EVENT_DB_URL:    `jdbc:postgresql://${h}:5432/decp_event_db`,
+      ANALYTICS_SOURCE_RESEARCH_DB_URL: `jdbc:postgresql://${h}:5432/decp_research_db`,
     }),
     getSecrets: (s) => ({
       POSTGRES_USER: ecs.Secret.fromSecretsManager(s, 'POSTGRES_USER'),
       POSTGRES_PASSWORD: ecs.Secret.fromSecretsManager(s, 'POSTGRES_PASSWORD'),
       RABBITMQ_USER: ecs.Secret.fromSecretsManager(s, 'RABBITMQ_USER'),
       RABBITMQ_PASSWORD: ecs.Secret.fromSecretsManager(s, 'RABBITMQ_PASSWORD'),
+      ANALYTICS_SOURCE_POST_MONGO_URI:      ecs.Secret.fromSecretsManager(s, 'MONGODB_URI_POSTS'),
+      ANALYTICS_SOURCE_MESSAGING_MONGO_URI: ecs.Secret.fromSecretsManager(s, 'MONGODB_URI_MESSAGING'),
     }),
   },
   {
