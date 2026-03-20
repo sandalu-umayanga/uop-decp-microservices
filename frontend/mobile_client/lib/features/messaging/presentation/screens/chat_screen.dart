@@ -8,33 +8,36 @@ import '../../../../core/utils/date_utils.dart';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 class _AppColors {
-  static const accent      = Color(0xFF1565C0);
-  static const accentMid   = Color(0xFF1976D2);
+  static const accent = Color(0xFF1565C0);
+  static const accentMid = Color(0xFF1976D2);
   static const accentLight = Color(0xFFE3F2FD);
-  static const accentGlow  = Color(0xFF42A5F5);
-  static const surface     = Color(0xFFFFFFFF);
-  static const surfaceAlt  = Color(0xFFF4F7FB);
+  static const accentGlow = Color(0xFF42A5F5);
+  static const surface = Color(0xFFFFFFFF);
+  static const surfaceAlt = Color(0xFFF4F7FB);
   static const surfaceCard = Color(0xFFF8FAFD);
-  static const border      = Color(0xFFE2E8F0);
-  static const borderSoft  = Color(0xFFEEF2F7);
+  static const border = Color(0xFFE2E8F0);
+  static const borderSoft = Color(0xFFEEF2F7);
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF475569);
-  static const textMuted   = Color(0xFF94A3B8);
-  static const bubbleOut   = Color(0xFF1565C0);
-  static const online      = Color(0xFF22C55E);
+  static const textMuted = Color(0xFF94A3B8);
+  static const bubbleOut = Color(0xFF1565C0);
+  static const online = Color(0xFF22C55E);
 }
 
 Color _avatarColor(String name) {
   const palette = [
-    Color(0xFF1565C0), Color(0xFF6A1B9A), Color(0xFF0277BD),
-    Color(0xFF00838F), Color(0xFFF57C00), Color(0xFFAD1457),
+    Color(0xFF1565C0),
+    Color(0xFF6A1B9A),
+    Color(0xFF0277BD),
+    Color(0xFF00838F),
+    Color(0xFFF57C00),
+    Color(0xFFAD1457),
   ];
   if (name.isEmpty) return palette[0];
   return palette[name.codeUnitAt(0) % palette.length];
 }
 
-String _initial(String name) =>
-    name.isNotEmpty ? name[0].toUpperCase() : '?';
+String _initial(String name) => name.isNotEmpty ? name[0].toUpperCase() : '?';
 
 // ─── Chat Screen ──────────────────────────────────────────────────────────────
 class ChatScreen extends ConsumerStatefulWidget {
@@ -47,12 +50,12 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen>
     with SingleTickerProviderStateMixin {
-  final _ctrl        = TextEditingController();
-  final _scrollCtrl  = ScrollController();
-  final _focusNode   = FocusNode();
-  bool  _typing      = false;
-  int   _prevCount   = 0;
-  bool  _showScrollBtn = false;
+  final _ctrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  final _focusNode = FocusNode();
+  bool _typing = false;
+  int _prevCount = 0;
+  bool _showScrollBtn = false;
 
   @override
   void initState() {
@@ -114,9 +117,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   Widget build(BuildContext context) {
-    final state       = ref.watch(chatProvider(widget.conversationId));
+    final state = ref.watch(chatProvider(widget.conversationId));
     final currentUser = ref.watch(currentUserProvider);
-    final convsState  = ref.watch(conversationsProvider);
+    final convsState = ref.watch(conversationsProvider);
 
     if (state.messages.length != _prevCount) {
       _prevCount = state.messages.length;
@@ -127,12 +130,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         .where((c) => c.id == widget.conversationId)
         .firstOrNull;
 
-    final isGroup    = conv?.isGroup ?? false;
-    final allNames   = conv?.participantNames ?? [];
+    final isGroup = conv?.isGroup ?? false;
+    final allNames = conv?.participantNames ?? [];
     final otherNames = currentUser == null
         ? allNames
         : allNames
-            .where((n) => n != currentUser.username && n != currentUser.fullName)
+            .where(
+                (n) => n != currentUser.username && n != currentUser.fullName)
             .toList();
 
     final displayName = isGroup && (conv?.groupName?.isNotEmpty ?? false)
@@ -180,16 +184,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         itemCount: state.messages.length,
                         itemBuilder: (_, i) {
-                          final msg   = state.messages[i];
-                          final isMe  = msg.senderId == currentUser?.id;
-                          final showDate = i == 0 ||
-                              _isDifferentDay(
-                                  state.messages[i - 1].createdAt,
-                                  msg.createdAt);
+                          final msg = state.messages[i];
+                          final isMe = msg.senderId.toString() ==
+                              currentUser?.id.toString();
+
                           final isFirst = i == 0 ||
-                              state.messages[i - 1].senderId != msg.senderId;
+                              state.messages[i - 1].senderId.toString() !=
+                                  msg.senderId.toString();
                           final isLast = i == state.messages.length - 1 ||
-                              state.messages[i + 1].senderId != msg.senderId;
+                              state.messages[i + 1].senderId.toString() !=
+                                  msg.senderId.toString();
+                          final showDate = i == 0 ||
+                              _isDifferentDay(state.messages[i - 1].createdAt,
+                                  msg.createdAt);
 
                           return Column(
                             children: [
@@ -313,7 +320,8 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   children: [
                     if (!isGroup && isConnected) ...[
                       Container(
-                        width: 6, height: 6,
+                        width: 6,
+                        height: 6,
                         margin: const EdgeInsets.only(right: 4),
                         decoration: const BoxDecoration(
                           color: _AppColors.online,
@@ -380,11 +388,13 @@ class _DmAvatar extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          width: 36, height: 36,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.18),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.5),
+            border:
+                Border.all(color: Colors.white.withOpacity(0.35), width: 1.5),
           ),
           child: Center(
             child: Text(
@@ -398,9 +408,11 @@ class _DmAvatar extends StatelessWidget {
           ),
         ),
         Positioned(
-          right: 0, bottom: 0,
+          right: 0,
+          bottom: 0,
           child: Container(
-            width: 11, height: 11,
+            width: 11,
+            height: 11,
             decoration: BoxDecoration(
               color: isConnected ? _AppColors.online : Colors.white38,
               shape: BoxShape.circle,
@@ -419,18 +431,21 @@ class _GroupAvatarSmall extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final first  = names.isNotEmpty ? names[0] : '?';
+    final first = names.isNotEmpty ? names[0] : '?';
     final second = names.length > 1 ? names[1] : first;
     return SizedBox(
-      width: 36, height: 36,
+      width: 36,
+      height: 36,
       child: Stack(
         children: [
           Positioned(
-            top: 0, left: 0,
+            top: 0,
+            left: 0,
             child: _TinyAvatar(name: first, size: 24, onBlue: true),
           ),
           Positioned(
-            bottom: 0, right: 0,
+            bottom: 0,
+            right: 0,
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -449,12 +464,14 @@ class _TinyAvatar extends StatelessWidget {
   final String name;
   final double size;
   final bool onBlue;
-  const _TinyAvatar({required this.name, required this.size, this.onBlue = false});
+  const _TinyAvatar(
+      {required this.name, required this.size, this.onBlue = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: size, height: size,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(onBlue ? 0.22 : 0.18),
         shape: BoxShape.circle,
@@ -483,7 +500,8 @@ class _ScrollToBottomButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 36, height: 36,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: _AppColors.surface,
           shape: BoxShape.circle,
@@ -514,8 +532,8 @@ class _DateSeparator extends StatelessWidget {
   String _label() {
     if (iso == null) return '';
     try {
-      final d       = DateTime.parse(iso!);
-      final now     = DateTime.now();
+      final d = DateTime.parse(iso!);
+      final now = DateTime.now();
       final yesterday = now.subtract(const Duration(days: 1));
       if (d.year == now.year && d.month == now.month && d.day == now.day)
         return 'Today';
@@ -605,8 +623,8 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Tail radius: sharp corner on the "origin" side for first bubble
-    final topLeft    = Radius.circular(isMe || !isFirstInGroup ? 20 : 6);
-    final topRight   = Radius.circular(!isMe || !isFirstInGroup ? 20 : 6);
+    final topLeft = Radius.circular(isMe || !isFirstInGroup ? 20 : 6);
+    final topRight = Radius.circular(!isMe || !isFirstInGroup ? 20 : 6);
     final bottomLeft = Radius.circular(isMe ? 20 : (isLastInGroup ? 6 : 20));
     final bottomRight = Radius.circular(!isMe ? 20 : (isLastInGroup ? 6 : 20));
 
@@ -642,7 +660,8 @@ class _MessageBubble extends StatelessWidget {
                     ? Padding(
                         padding: const EdgeInsets.only(right: 8, bottom: 2),
                         child: Container(
-                          width: 30, height: 30,
+                          width: 30,
+                          height: 30,
                           decoration: BoxDecoration(
                             color: _avatarColor(message.senderName ?? '')
                                 .withOpacity(0.15),
@@ -668,8 +687,8 @@ class _MessageBubble extends StatelessWidget {
                   maxWidth: MediaQuery.of(context).size.width * 0.68,
                 ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: isMe ? _AppColors.bubbleOut : _AppColors.surface,
                     borderRadius: BorderRadius.only(
@@ -678,9 +697,8 @@ class _MessageBubble extends StatelessWidget {
                       bottomLeft: bottomLeft,
                       bottomRight: bottomRight,
                     ),
-                    border: isMe
-                        ? null
-                        : Border.all(color: _AppColors.borderSoft),
+                    border:
+                        isMe ? null : Border.all(color: _AppColors.borderSoft),
                     boxShadow: [
                       BoxShadow(
                         color: isMe
@@ -699,9 +717,7 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         message.content,
                         style: TextStyle(
-                          color: isMe
-                              ? Colors.white
-                              : _AppColors.textPrimary,
+                          color: isMe ? Colors.white : _AppColors.textPrimary,
                           fontSize: 14.5,
                           height: 1.45,
                           fontWeight: FontWeight.w400,
@@ -797,15 +813,18 @@ class _TypingIndicatorState extends State<_TypingIndicator>
               return Row(
                 children: List.generate(3, (i) {
                   final phase = ((_ctrl.value * 3) - i).clamp(0.0, 1.0);
-                  final scale = 0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2);
+                  final scale =
+                      0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2);
                   return Padding(
                     padding: const EdgeInsets.only(right: 3),
                     child: Transform.scale(
                       scale: scale,
                       child: Container(
-                        width: 7, height: 7,
+                        width: 7,
+                        height: 7,
                         decoration: BoxDecoration(
-                          color: _AppColors.accent.withOpacity(0.5 + scale * 0.3),
+                          color:
+                              _AppColors.accent.withOpacity(0.5 + scale * 0.3),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -851,7 +870,9 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        12, 10, 12,
+        12,
+        10,
+        12,
         MediaQuery.of(context).viewInsets.bottom +
             MediaQuery.of(context).padding.bottom +
             10,
@@ -943,7 +964,8 @@ class _InputBar extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: isTyping ? _AppColors.accent : _AppColors.accentLight,
               shape: BoxShape.circle,
@@ -987,7 +1009,8 @@ class _BarIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 36, height: 36,
+        width: 36,
+        height: 36,
         child: Icon(icon, color: color, size: 22),
       ),
     );
@@ -1008,14 +1031,16 @@ class _EmptyChat extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Container(
-                width: 88, height: 88,
+                width: 88,
+                height: 88,
                 decoration: BoxDecoration(
                   color: _AppColors.accentLight,
                   shape: BoxShape.circle,
                 ),
               ),
               Container(
-                width: 68, height: 68,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   color: _AppColors.accentLight,
                   borderRadius: BorderRadius.circular(22),

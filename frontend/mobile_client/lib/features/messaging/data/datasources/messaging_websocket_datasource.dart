@@ -1,36 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:stomp_dart_client/stomp_dart_client.dart';
-import '../../../../core/constants/api_constants.dart';
-import '../../../../core/storage/secure_storage_service.dart';
-import '../models/messaging_models.dart';
 
-/// Manages a STOMP WebSocket connection for real-time chat.
-///
-/// Fixes applied vs the original:
-///   1. [_isConnected] flag — send calls are dropped (not thrown) when not ready.
-///   2. [_pendingQueue] — messages queued while connecting are flushed on connect.
-///   3. Auto-reconnect with exponential back-off (max 30 s).
-///   4. [waitUntilConnected] — callers can await readiness before sending.
+import 'package:decp_mobile_app/core/constants/api_constants.dart';
+import 'package:decp_mobile_app/core/storage/secure_storage_service.dart';
+import 'package:decp_mobile_app/features/messaging/data/models/messaging_models.dart';
+import 'package:stomp_dart_client/stomp_dart_client.dart';
+
 class MessagingWebSocketDatasource {
   StompClient? _client;
   final SecureStorageService _storage;
   final void Function(MessageModel) onMessage;
   final void Function(Map<String, dynamic>) onTyping;
 
-  // ── Connection state ───────────────────────────────────────────────────────
   bool _isConnected = false;
-  bool _disposed    = false;
+  bool _disposed = false;
   String? _conversationId;
+  String? _token; // ← store token so send frames can include it
 
-  /// Completes when the STOMP session is fully established (onConnect fired).
   Completer<void> _readyCompleter = Completer<void>();
-
-  /// Messages queued while the connection is being established.
   final List<_QueuedMessage> _pendingQueue = [];
 
-  // ── Reconnect state ────────────────────────────────────────────────────────
-  int  _reconnectAttempt = 0;
+  int _reconnectAttempt = 0;
   Timer? _reconnectTimer;
   static const _maxBackoffSeconds = 30;
 
@@ -40,10 +30,6 @@ class MessagingWebSocketDatasource {
     required this.onTyping,
   }) : _storage = storage;
 
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  /// Returns a Future that resolves once the STOMP session is active.
-  /// Useful for callers that want to await before sending the first message.
   Future<void> waitUntilConnected() => _readyCompleter.future;
 
   Future<void> connect({required String conversationId}) async {
@@ -57,16 +43,20 @@ class MessagingWebSocketDatasource {
     required int userId,
     required String userName,
   }) {
+    // FIX: include Authorization on every SEND frame
     final msg = _QueuedMessage(
       destination: '/app/chat/send',
-      headers: {'X-User-Id': '$userId', 'X-User-Name': userName},
+      headers: {
+        'X-User-Id': '$userId',
+        'X-User-Name': userName,
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
       body: jsonEncode({'conversationId': conversationId, 'content': content}),
     );
 
     if (_isConnected && _client != null) {
       _safeSend(msg);
     } else {
-      // Queue and wait — will be flushed in _onConnect
       _pendingQueue.add(msg);
     }
   }
@@ -77,9 +67,12 @@ class MessagingWebSocketDatasource {
     required String userName,
     required bool typing,
   }) {
-    if (!_isConnected) return; // typing indicators are fire-and-forget
+    if (!_isConnected) return;
     _safeSend(_QueuedMessage(
       destination: '/app/chat/typing',
+      headers: {
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
       body: jsonEncode({
         'conversationId': conversationId,
         'userId': userId,
@@ -93,16 +86,21 @@ class MessagingWebSocketDatasource {
     if (!_isConnected) return;
     _safeSend(_QueuedMessage(
       destination: '/app/chat/online',
-      headers: {'X-User-Id': '$userId'},
+      headers: {
+        'X-User-Id': '$userId',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
       body: '',
     ));
   }
 
   void sendOffline(int userId) {
-    // Best-effort even if connection is shaky
     _safeSend(_QueuedMessage(
       destination: '/app/chat/offline',
-      headers: {'X-User-Id': '$userId'},
+      headers: {
+        'X-User-Id': '$userId',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
       body: '',
     ));
   }
@@ -115,28 +113,25 @@ class MessagingWebSocketDatasource {
     _isConnected = false;
   }
 
-  // ── Internal ───────────────────────────────────────────────────────────────
-
   Future<void> _doConnect() async {
     if (_disposed) return;
 
-    final token = await _storage.readToken();
+    // FIX: cache token so it's available to all subsequent send frames
+    _token = await _storage.readToken();
+    print('TOKEN: $_token');
+    print('WS URL: ${ApiConstants.wsUrl}?token=$_token');
 
     _client = StompClient(
       config: StompConfig(
-        url: '${ApiConstants.wsUrl}?token=$token',
+        url: '${ApiConstants.wsUrl}?token=$_token',
         onConnect: _onConnect,
         onDisconnect: _onDisconnect,
         onWebSocketError: _onError,
         onStompError: _onError,
-        stompConnectHeaders: token != null
-            ? {'Authorization': 'Bearer $token'}
-            : {},
-        webSocketConnectHeaders: token != null
-            ? {'Authorization': 'Bearer $token'}
-            : {},
-        // Built-in reconnect is disabled — we handle it ourselves so we can
-        // reset subscriptions and flush the pending queue on each reconnect.
+        stompConnectHeaders:
+            _token != null ? {'Authorization': 'Bearer $_token'} : {},
+        webSocketConnectHeaders:
+            _token != null ? {'Authorization': 'Bearer $_token'} : {},
         reconnectDelay: Duration.zero,
       ),
     );
@@ -145,12 +140,13 @@ class MessagingWebSocketDatasource {
   }
 
   void _onConnect(StompFrame frame) {
+    print('STOMP CONNECTED: ${frame.headers}');
+    
     if (_disposed) return;
 
-    _isConnected      = true;
+    _isConnected = true;
     _reconnectAttempt = 0;
 
-    // Resolve any awaiters
     if (!_readyCompleter.isCompleted) {
       _readyCompleter.complete();
     }
@@ -158,7 +154,6 @@ class MessagingWebSocketDatasource {
     final convId = _conversationId;
     if (convId == null) return;
 
-    // Subscribe to messages
     _client!.subscribe(
       destination: '/topic/messages/$convId',
       callback: (frame) {
@@ -170,7 +165,6 @@ class MessagingWebSocketDatasource {
       },
     );
 
-    // Subscribe to typing indicators
     _client!.subscribe(
       destination: '/topic/typing/$convId',
       callback: (frame) {
@@ -182,21 +176,25 @@ class MessagingWebSocketDatasource {
       },
     );
 
-    // Flush queued messages
+    // Re-build queued messages with the fresh token before flushing,
+    // in case the token was null when the message was originally queued
     final queued = List<_QueuedMessage>.from(_pendingQueue);
     _pendingQueue.clear();
     for (final msg in queued) {
-      _safeSend(msg);
+      _safeSend(msg.withAuth(_token));
     }
   }
 
   void _onDisconnect(StompFrame frame) {
+    print('STOMP DISCONNECT: ${frame.headers}');
+    
     if (_disposed) return;
     _markDisconnected();
     _scheduleReconnect();
   }
 
   void _onError(dynamic error) {
+    print('STOMP ERROR: $error');
     if (_disposed) return;
     _markDisconnected();
     _scheduleReconnect();
@@ -204,7 +202,6 @@ class MessagingWebSocketDatasource {
 
   void _markDisconnected() {
     _isConnected = false;
-    // Reset so new awaiters can wait for the next connect
     if (_readyCompleter.isCompleted) {
       _readyCompleter = Completer<void>();
     }
@@ -214,7 +211,6 @@ class MessagingWebSocketDatasource {
     _reconnectTimer?.cancel();
     if (_disposed) return;
 
-    // Exponential back-off: 1 s, 2 s, 4 s, 8 s, 16 s, 30 s (cap)
     final delaySeconds = (_reconnectAttempt == 0)
         ? 1
         : (1 << _reconnectAttempt).clamp(1, _maxBackoffSeconds);
@@ -225,8 +221,6 @@ class MessagingWebSocketDatasource {
     });
   }
 
-  /// Wraps _client.send in a try/catch so a stale StompClient can never
-  /// throw an unhandled StompBadStateException up to the UI.
   void _safeSend(_QueuedMessage msg) {
     try {
       _client?.send(
@@ -235,8 +229,6 @@ class MessagingWebSocketDatasource {
         body: msg.body,
       );
     } catch (_) {
-      // Connection was lost between the isConnected check and the send.
-      // Queue the message so it's retried on reconnect (only for chat msgs).
       if (msg.destination == '/app/chat/send') {
         _pendingQueue.add(msg);
       }
@@ -244,7 +236,6 @@ class MessagingWebSocketDatasource {
   }
 }
 
-/// Simple value object for queued outbound frames.
 class _QueuedMessage {
   final String destination;
   final Map<String, String> headers;
@@ -255,4 +246,14 @@ class _QueuedMessage {
     this.headers = const {},
     this.body = '',
   });
+
+  // FIX: returns a copy with Authorization injected/updated
+  _QueuedMessage withAuth(String? token) {
+    if (token == null) return this;
+    return _QueuedMessage(
+      destination: destination,
+      headers: {...headers, 'Authorization': 'Bearer $token'},
+      body: body,
+    );
+  }
 }

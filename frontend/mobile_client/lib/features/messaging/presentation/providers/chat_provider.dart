@@ -5,7 +5,6 @@ import '../../data/models/messaging_models.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 
-// ─── Chat State ────────────────────────────────────────────────────────────────
 class ChatState {
   final List<MessageModel> messages;
   final bool isLoading;
@@ -31,30 +30,39 @@ class ChatState {
     String? typingUser,
     String? connectionError,
     bool clearTyping = false,
-    bool clearError  = false,
+    bool clearError = false,
   }) {
     return ChatState(
-      messages:        messages        ?? this.messages,
-      isLoading:       isLoading       ?? this.isLoading,
-      isConnected:     isConnected     ?? this.isConnected,
-      someoneTyping:   clearTyping ? false : (someoneTyping ?? this.someoneTyping),
-      typingUser:      clearTyping ? null  : (typingUser    ?? this.typingUser),
-      connectionError: clearError  ? null  : (connectionError ?? this.connectionError),
+      messages: messages ?? this.messages,
+      isLoading: isLoading ?? this.isLoading,
+      isConnected: isConnected ?? this.isConnected,
+      someoneTyping:
+          clearTyping ? false : (someoneTyping ?? this.someoneTyping),
+      typingUser: clearTyping ? null : (typingUser ?? this.typingUser),
+      connectionError:
+          clearError ? null : (connectionError ?? this.connectionError),
     );
   }
 }
 
-// ─── Chat Notifier ─────────────────────────────────────────────────────────────
 class ChatNotifier extends Notifier<ChatState> {
   final String conversationId;
   late final MessagingWebSocketDatasource _ws;
+  bool _disposed = false; // FIX Bug 1: guard state updates after dispose
 
   ChatNotifier(this.conversationId);
 
   @override
   ChatState build() {
-    _init();
+    ref.onDispose(() => _disposed = true);
+    _init(); // don't await — intentional fire-and-forget, but now guarded
     return const ChatState(isLoading: true);
+  }
+
+  // FIX Bug 1: wrap every state assignment so it never runs after dispose
+  void _setState(ChatState Function(ChatState) updater) {
+    if (_disposed) return;
+    state = updater(state);
   }
 
   Future<void> _init() async {
@@ -63,10 +71,10 @@ class ChatNotifier extends Notifier<ChatState> {
       final messages = await ref
           .read(messagingDatasourceProvider)
           .getMessages(conversationId);
-      await ref.read(messagingDatasourceProvider).markRead(conversationId);
-      state = state.copyWith(messages: messages, isLoading: false);
-    } catch (_) {
-      state = state.copyWith(isLoading: false);
+      _setState((s) => s.copyWith(messages: messages, isLoading: false));
+    } catch (e) {
+      // FIX Bug 1: catch the error so _init continues to the WS connection
+      _setState((s) => s.copyWith(isLoading: false));
     }
 
     // ── 2. Build WebSocket datasource ────────────────────────────────────────
@@ -75,102 +83,108 @@ class ChatNotifier extends Notifier<ChatState> {
     _ws = MessagingWebSocketDatasource(
       storage: ref.read(secureStorageProvider),
       onMessage: (msg) {
-        // Skip duplicates (e.g. the server echo of our own optimistic message)
-        final alreadyExists = state.messages.any((m) => m.id == msg.id);
-        if (!alreadyExists) {
-          // Replace optimistic temp message if content matches
-          final tempIndex = state.messages.indexWhere(
+        _setState((current) {
+          final msgs = current.messages;
+
+          // Skip true duplicates (non-temp, same real ID)
+          if (msgs.any((m) => !m.id.startsWith('temp_') && m.id == msg.id)) {
+            return current;
+          }
+
+          // Replace optimistic: match on content + senderId (both int now, safe ==)
+          final tempIndex = msgs.indexWhere(
             (m) =>
                 m.id.startsWith('temp_') &&
                 m.content == msg.content &&
-                m.senderId == msg.senderId,
+                m.senderId ==
+                    msg.senderId, // both int now, no toString() needed
           );
+
+          final updated = List<MessageModel>.from(msgs);
           if (tempIndex != -1) {
-            final updated = List<MessageModel>.from(state.messages);
             updated[tempIndex] = msg;
-            state = state.copyWith(messages: updated);
           } else {
-            state = state.copyWith(messages: [...state.messages, msg]);
+            updated.add(msg);
           }
-        }
+
+          return current.copyWith(messages: updated);
+        });
       },
       onTyping: (data) {
         final isTyping = data['typing'] as bool? ?? false;
-        state = state.copyWith(
-          someoneTyping: isTyping,
-          typingUser:    data['userName'] as String?,
-          clearTyping:   !isTyping,
-        );
+        _setState((current) => current.copyWith(
+              someoneTyping: isTyping,
+              typingUser: data['userName'] as String?,
+              clearTyping: !isTyping,
+            ));
       },
     );
 
-    // ── 3. Connect and await the STOMP handshake ─────────────────────────────
+    // ── 3. Connect ───────────────────────────────────────────────────────────
     try {
       await _ws.connect(conversationId: conversationId);
-      // waitUntilConnected resolves once onConnect fires (subscriptions ready)
       await _ws.waitUntilConnected();
 
-      if (user != null) _ws.sendOnline(user.id);
-      state = state.copyWith(isConnected: true, clearError: true);
+      if (user != null) {
+  _ws.sendOnline(user.id);
+
+  await ref
+      .read(messagingDatasourceProvider)
+      .markRead(conversationId);
+}
+      _setState((s) => s.copyWith(isConnected: true, clearError: true));
     } catch (e) {
-      // Connection failed — the datasource will keep retrying in the background.
-      // The UI will show "Connecting…" and the send button will queue messages.
-      state = state.copyWith(
-        isConnected:     false,
-        connectionError: 'Could not connect. Retrying…',
-      );
+      _setState((s) => s.copyWith(
+            isConnected: false,
+            connectionError: 'Could not connect. Retrying…',
+          ));
     }
 
-    // ── 4. Cleanup on provider dispose ───────────────────────────────────────
+    // ── 4. Cleanup ───────────────────────────────────────────────────────────
     ref.onDispose(() {
       if (user != null) _ws.sendOffline(user.id);
       _ws.disconnect();
     });
   }
 
-  // ── sendMessage ─────────────────────────────────────────────────────────────
-  // Safe to call at any time — the datasource queues the message internally
-  // if the connection isn't ready yet, and flushes it on (re)connect.
   void sendMessage(String content) {
     final user = ref.read(currentUserProvider);
     if (user == null || content.trim().isEmpty) return;
 
-    // Optimistic UI update — show message immediately regardless of WS state
-    final optimistic = MessageModel(
-      id:             'temp_${DateTime.now().millisecondsSinceEpoch}',
-      conversationId: conversationId,
-      senderId:       user.id,
-      senderName:     user.fullName,
-      content:        content,
-      readBy:         [user.id],
-      createdAt:      DateTime.now().toIso8601String(),
-    );
-    state = state.copyWith(messages: [...state.messages, optimistic]);
+    // Parse user.id to int so the type matches MessageModel.senderId
+    final senderIdInt = int.tryParse(user.id.toString()) ?? 0;
 
-    // Delegate to datasource — queues internally if not yet connected
+    final optimistic = MessageModel(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      conversationId: conversationId,
+      senderId: senderIdInt, // ← now int, matches server response
+      senderName: user.fullName,
+      content: content,
+      readBy: [senderIdInt],
+      createdAt: DateTime.now().toIso8601String(),
+    );
+
+    _setState((s) => s.copyWith(messages: [...s.messages, optimistic]));
+
     _ws.sendMessage(
       conversationId: conversationId,
-      content:        content,
-      userId:         user.id,
-      userName:       user.fullName,
+      content: content,
+      userId: senderIdInt, // ← pass int, consistent everywhere
+      userName: user.fullName,
     );
   }
 
-  // ── sendTyping ──────────────────────────────────────────────────────────────
   void sendTyping(bool typing) {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    // Silently dropped if not connected (fire-and-forget, non-critical)
     _ws.sendTyping(
       conversationId: conversationId,
-      userId:         user.id,
-      userName:       user.fullName,
-      typing:         typing,
+      userId: user.id,
+      userName: user.fullName,
+      typing: typing,
     );
   }
 }
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
-final chatProvider =
-    NotifierProvider.family<ChatNotifier, ChatState, String>(
-        (arg) => ChatNotifier(arg));
+final chatProvider = NotifierProvider.family<ChatNotifier, ChatState, String>(
+    (arg) => ChatNotifier(arg));
